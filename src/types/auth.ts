@@ -4,6 +4,7 @@ export type AuthUser = {
   email?: string
   roles?: Array<string | { name: string }>
   permissions?: Array<string | { name: string }>
+  all_permissions?: Array<string | { name: string }>
   [key: string]: unknown
 }
 

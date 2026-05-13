@@ -13,8 +13,18 @@ export const useAuthStore = defineStore('auth', () => {
 
   const isAuthenticated = computed(() => Boolean(token.value))
   const userName = computed(() => user.value?.name ?? user.value?.email ?? 'User')
-  const permissions = computed(() => normalizeNameList(user.value?.permissions))
+  const permissions = computed(() =>
+    normalizeNameList(user.value?.all_permissions ?? user.value?.permissions),
+  )
   const roles = computed(() => normalizeNameList(user.value?.roles))
+
+  function hasPermission(permission: string) {
+    return permissions.value.includes(permission)
+  }
+
+  function hasAnyPermission(nextPermissions: string[]) {
+    return nextPermissions.some((permission) => hasPermission(permission))
+  }
 
   async function login(credentials: LoginCredentials, remember: boolean) {
     isLoading.value = true
@@ -92,6 +102,8 @@ export const useAuthStore = defineStore('auth', () => {
     userName,
     permissions,
     roles,
+    hasPermission,
+    hasAnyPermission,
     login,
     fetchCurrentUser,
     logout,

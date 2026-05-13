@@ -24,6 +24,15 @@ const router = createRouter({
         requiresAuth: true,
       },
     },
+    {
+      path: '/master/warehouses',
+      name: 'warehouses',
+      component: () => import('@/views/warehouses/WarehouseListView.vue'),
+      meta: {
+        requiresAuth: true,
+        permission: 'warehouses.view',
+      },
+    },
   ],
 })
 
@@ -36,6 +45,20 @@ router.beforeEach(async (to) => {
       query: {
         redirect: to.fullPath,
       },
+    }
+  }
+
+  if (to.meta.requiresAuth && typeof to.meta.permission === 'string') {
+    try {
+      await authStore.fetchCurrentUser()
+    } catch {
+      // Keep navigation decision based on the currently stored session.
+    }
+
+    if (!authStore.hasPermission(to.meta.permission)) {
+      return {
+        name: 'dashboard',
+      }
     }
   }
 

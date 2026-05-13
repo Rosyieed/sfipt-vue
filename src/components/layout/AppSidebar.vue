@@ -1,9 +1,12 @@
 <script setup lang="ts">
+import { computed } from 'vue'
 import { RouterLink } from 'vue-router'
+import { useAuthStore } from '@/stores/auth'
 
 type NavigationItem = {
   label: string
   to: string
+  permission?: string
 }
 
 type Props = {
@@ -17,12 +20,23 @@ const emit = defineEmits<{
   close: []
 }>()
 
+const authStore = useAuthStore()
+
 const navigationItems: NavigationItem[] = [
   {
     label: 'Dashboard',
     to: '/dashboard',
   },
+  {
+    label: 'Gudang',
+    to: '/master/warehouses',
+    permission: 'warehouses.view',
+  },
 ]
+
+const visibleNavigationItems = computed(() =>
+  navigationItems.filter((item) => !item.permission || authStore.hasPermission(item.permission)),
+)
 </script>
 
 <template>
@@ -51,17 +65,40 @@ const navigationItems: NavigationItem[] = [
         </div>
       </div>
 
-      <nav class="flex-1 space-y-1 px-3 py-4">
-        <RouterLink
-          v-for="item in navigationItems"
-          :key="item.to"
-          :to="item.to"
-          class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-950"
-          active-class="bg-teal-50 text-teal-700"
-          @click="closeOnMenuClick && emit('close')"
-        >
-          {{ item.label }}
-        </RouterLink>
+      <nav class="flex-1 space-y-4 px-3 py-4">
+        <div>
+          <p class="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Utama
+          </p>
+          <div class="mt-2 space-y-1">
+            <RouterLink
+              to="/dashboard"
+              class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+              active-class="bg-teal-50 text-teal-700"
+              @click="closeOnMenuClick && emit('close')"
+            >
+              Dashboard
+            </RouterLink>
+          </div>
+        </div>
+
+        <div v-if="visibleNavigationItems.some((item) => item.to !== '/dashboard')">
+          <p class="px-3 text-xs font-semibold uppercase tracking-[0.18em] text-slate-400">
+            Master
+          </p>
+          <div class="mt-2 space-y-1">
+            <RouterLink
+              v-for="item in visibleNavigationItems.filter((item) => item.to !== '/dashboard')"
+              :key="item.to"
+              :to="item.to"
+              class="block rounded-lg px-3 py-2 text-sm font-medium text-slate-600 hover:bg-slate-100 hover:text-slate-950"
+              active-class="bg-teal-50 text-teal-700"
+              @click="closeOnMenuClick && emit('close')"
+            >
+              {{ item.label }}
+            </RouterLink>
+          </div>
+        </div>
       </nav>
 
       <div class="flex h-14 items-center border-t border-slate-200 px-4 text-xs text-slate-500">
