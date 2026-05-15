@@ -1,11 +1,6 @@
 import { apiRequest } from '@/services/apiClient'
-import type {
-  ApiEnvelope,
-  PaginatedData,
-  Warehouse,
-  WarehouseListParams,
-  WarehousePayload,
-} from '@/types/warehouse'
+import type { ApiEnvelope, PaginatedData } from '@/types/api'
+import type { Warehouse, WarehouseListParams, WarehousePayload } from '@/types/warehouse'
 
 export async function getWarehouses(token: string, params: WarehouseListParams = {}) {
   const searchParams = new URLSearchParams({

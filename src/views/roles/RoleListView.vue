@@ -8,72 +8,79 @@ import { useConfirm } from 'primevue/useconfirm'
 import DataTable from 'primevue/datatable'
 import Message from 'primevue/message'
 import Skeleton from 'primevue/skeleton'
+import Tag from 'primevue/tag'
 import Toolbar from 'primevue/toolbar'
 import DashboardLayout from '@/components/layout/DashboardLayout.vue'
-import WarehouseFormDialog from '@/components/warehouses/WarehouseFormDialog.vue'
-import WarehouseStatusTag from '@/components/warehouses/WarehouseStatusTag.vue'
-import WarehouseTypeTag from '@/components/warehouses/WarehouseTypeTag.vue'
+import RoleFormDialog from '@/components/roles/RoleFormDialog.vue'
 import { ApiError } from '@/services/apiClient'
-import * as warehouseService from '@/services/warehouseService'
+import * as roleService from '@/services/roleService'
 import { useAuthStore } from '@/stores/auth'
-import type { PaginatedData } from '@/types/api'
 import type { ApiValidationErrors } from '@/types/auth'
-import type {
-  SortDirection,
-  Warehouse,
-  WarehousePayload,
-  WarehouseSortField,
-} from '@/types/warehouse'
+import type { Permission, Role, RolePayload, RoleSortField } from '@/types/role'
+import type { SortDirection } from '@/types/warehouse'
 
-type WarehouseLoadingRow = {
+type RoleLoadingRow = {
   id: string
   __loading: true
 }
 
-type WarehouseTableRow = Warehouse | WarehouseLoadingRow
+type RoleTableRow = Role | RoleLoadingRow
 
 const authStore = useAuthStore()
 const router = useRouter()
 const confirm = useConfirm()
 
-const warehouses = ref<Warehouse[]>([])
-const pagination = ref<PaginatedData<Warehouse> | null>(null)
+const roles = ref<Role[]>([])
+const permissions = ref<Permission[]>([])
 const isLoading = ref(false)
+const isLoadingPermissions = ref(false)
 const actionId = ref<number | null>(null)
 const errorMessage = ref('')
 const successMessage = ref('')
 const formErrorMessage = ref('')
 const validationErrors = ref<ApiValidationErrors>({})
 const formMode = ref<'create' | 'edit'>('create')
-const selectedWarehouse = ref<Warehouse | null>(null)
+const selectedRole = ref<Role | null>(null)
 const formDialogVisible = ref(false)
 const isSubmitting = ref(false)
-const currentPage = ref(1)
-const perPage = 10
-const sortField = ref<WarehouseSortField>('name')
+const sortField = ref<RoleSortField>('name')
 const sortDirection = ref<SortDirection>('asc')
 const sortOrder = ref<1 | -1>(1)
 
-const canCreate = computed(() => authStore.hasPermission('warehouses.create'))
-const canUpdate = computed(() => authStore.hasPermission('warehouses.update'))
-const canDelete = computed(() => authStore.hasPermission('warehouses.delete'))
+const canCreate = computed(() => authStore.hasPermission('roles.create'))
+const canUpdate = computed(() => authStore.hasPermission('roles.update'))
+const canDelete = computed(() => authStore.hasPermission('roles.delete'))
 const canManage = computed(() => canUpdate.value || canDelete.value)
-const tableRows = computed<WarehouseTableRow[]>(() => {
+const tableRows = computed<RoleTableRow[]>(() => {
   if (isLoading.value) {
-    return Array.from({ length: perPage }, (_, index) => ({
+    return Array.from({ length: 6 }, (_, index) => ({
       id: `loading-${index}`,
       __loading: true,
     }))
   }
 
-  return warehouses.value
+  return sortedRoles.value
+})
+
+const sortedRoles = computed(() => {
+  return [...roles.value].sort((first, second) => {
+    const firstValue = getSortValue(first, sortField.value)
+    const secondValue = getSortValue(second, sortField.value)
+    const result = firstValue.localeCompare(secondValue, 'id-ID', {
+      numeric: true,
+      sensitivity: 'base',
+    })
+
+    return sortDirection.value === 'asc' ? result : -result
+  })
 })
 
 onMounted(() => {
-  void loadWarehouses()
+  void loadRoles()
+  void loadPermissions()
 })
 
-async function loadWarehouses(page = currentPage.value) {
+async function loadRoles() {
   if (!authStore.token) {
     await router.push('/login')
     return
@@ -83,15 +90,7 @@ async function loadWarehouses(page = currentPage.value) {
   errorMessage.value = ''
 
   try {
-    const result = await warehouseService.getWarehouses(authStore.token, {
-      page,
-      perPage,
-      sort: sortField.value,
-      direction: sortDirection.value,
-    })
-    warehouses.value = result.data
-    pagination.value = result
-    currentPage.value = result.current_page
+    roles.value = await roleService.getRoles(authStore.token)
   } catch (error) {
     await handleApiError(error)
   } finally {
@@ -99,41 +98,52 @@ async function loadWarehouses(page = currentPage.value) {
   }
 }
 
-function handlePage(event: { page?: number }) {
-  void loadWarehouses((event.page ?? 0) + 1)
+async function loadPermissions() {
+  if (!authStore.token) {
+    return
+  }
+
+  isLoadingPermissions.value = true
+
+  try {
+    permissions.value = await roleService.getPermissions(authStore.token)
+  } catch (error) {
+    await handleApiError(error)
+  } finally {
+    isLoadingPermissions.value = false
+  }
 }
 
 function handleSort(event: {
-  sortField?: string | ((item: Warehouse) => unknown)
+  sortField?: string | ((item: Role) => unknown)
   sortOrder?: number | null
 }) {
-  if (typeof event.sortField !== 'string' || !isWarehouseSortField(event.sortField)) {
+  if (typeof event.sortField !== 'string' || !isRoleSortField(event.sortField)) {
     return
   }
 
   sortField.value = event.sortField
   sortOrder.value = event.sortOrder === -1 ? -1 : 1
   sortDirection.value = sortOrder.value === -1 ? 'desc' : 'asc'
-  void loadWarehouses(1)
 }
 
 function openCreateDialog() {
   formMode.value = 'create'
-  selectedWarehouse.value = null
+  selectedRole.value = null
   formErrorMessage.value = ''
   validationErrors.value = {}
   formDialogVisible.value = true
 }
 
-function openEditDialog(warehouse: Warehouse) {
+function openEditDialog(role: Role) {
   formMode.value = 'edit'
-  selectedWarehouse.value = warehouse
+  selectedRole.value = role
   formErrorMessage.value = ''
   validationErrors.value = {}
   formDialogVisible.value = true
 }
 
-async function saveWarehouse(payload: WarehousePayload) {
+async function saveRole(payload: RolePayload) {
   if (!authStore.token) {
     await router.push('/login')
     return
@@ -146,16 +156,16 @@ async function saveWarehouse(payload: WarehousePayload) {
   validationErrors.value = {}
 
   try {
-    if (formMode.value === 'edit' && selectedWarehouse.value) {
-      await warehouseService.updateWarehouse(authStore.token, selectedWarehouse.value.id, payload)
-      successMessage.value = 'Gudang berhasil diperbarui.'
+    if (formMode.value === 'edit' && selectedRole.value) {
+      await roleService.updateRole(authStore.token, selectedRole.value.id, payload)
+      successMessage.value = 'Role berhasil diperbarui.'
     } else {
-      await warehouseService.createWarehouse(authStore.token, payload)
-      successMessage.value = 'Gudang berhasil ditambahkan.'
+      await roleService.createRole(authStore.token, payload)
+      successMessage.value = 'Role berhasil ditambahkan.'
     }
 
     formDialogVisible.value = false
-    await loadWarehouses()
+    await loadRoles()
   } catch (error) {
     await handleApiError(error, 'form')
   } finally {
@@ -163,10 +173,10 @@ async function saveWarehouse(payload: WarehousePayload) {
   }
 }
 
-function confirmDeleteWarehouse(warehouse: Warehouse) {
+function confirmDeleteRole(role: Role) {
   confirm.require({
-    header: 'Hapus Gudang',
-    message: `Apakah Anda yakin ingin menghapus gudang "${warehouse.name}"?`,
+    header: 'Hapus Role',
+    message: `Apakah Anda yakin ingin menghapus role "${role.name}"?`,
     icon: 'pi pi-exclamation-triangle',
     rejectLabel: 'Batal',
     acceptLabel: 'Hapus',
@@ -178,24 +188,24 @@ function confirmDeleteWarehouse(warehouse: Warehouse) {
       severity: 'danger',
     },
     accept: () => {
-      void deleteWarehouse(warehouse)
+      void deleteRole(role)
     },
   })
 }
 
-async function deleteWarehouse(warehouse: Warehouse) {
+async function deleteRole(role: Role) {
   if (!authStore.token) {
     return
   }
 
-  actionId.value = warehouse.id
+  actionId.value = role.id
   errorMessage.value = ''
   successMessage.value = ''
 
   try {
-    await warehouseService.deleteWarehouse(authStore.token, warehouse.id)
-    successMessage.value = 'Gudang berhasil dihapus.'
-    await loadWarehouses()
+    await roleService.deleteRole(authStore.token, role.id)
+    successMessage.value = 'Role berhasil dihapus.'
+    await loadRoles()
   } catch (error) {
     await handleApiError(error, 'page')
   } finally {
@@ -212,7 +222,7 @@ async function handleApiError(error: unknown, target: 'page' | 'form' = 'page') 
     }
 
     if (error.status === 403) {
-      const message = 'Anda tidak memiliki akses untuk mengelola data gudang.'
+      const message = 'Anda tidak memiliki akses untuk mengelola data role.'
       if (target === 'form') {
         formErrorMessage.value = message
       } else {
@@ -230,7 +240,7 @@ async function handleApiError(error: unknown, target: 'page' | 'form' = 'page') 
     return
   }
 
-  const message = 'Data gudang belum bisa diproses. Silakan coba lagi.'
+  const message = 'Data role belum bisa diproses. Silakan coba lagi.'
   if (target === 'form') {
     formErrorMessage.value = message
   } else {
@@ -249,11 +259,33 @@ function formatDate(value?: string) {
   }).format(new Date(value))
 }
 
-function isWarehouseSortField(value: string): value is WarehouseSortField {
-  return ['id', 'name', 'location', 'type', 'is_active', 'created_at'].includes(value)
+function formatPermissions(role: Role) {
+  return normalizePermissions(role.permissions)
 }
 
-function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
+function normalizePermissions(permissions?: Role['permissions']) {
+  if (!Array.isArray(permissions)) {
+    return []
+  }
+
+  return permissions
+    .map((permission) => (typeof permission === 'string' ? permission : permission.name))
+    .filter(Boolean)
+}
+
+function getSortValue(role: Role, field: RoleSortField) {
+  if (field === 'created_at') {
+    return role.created_at ?? ''
+  }
+
+  return String(role[field] ?? '')
+}
+
+function isRoleSortField(value: string): value is RoleSortField {
+  return ['id', 'name', 'created_at'].includes(value)
+}
+
+function isLoadingRow(row: RoleTableRow): row is RoleLoadingRow {
   return '__loading' in row
 }
 </script>
@@ -264,13 +296,13 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p class="text-sm font-medium uppercase tracking-[0.2em] text-teal-700">Master</p>
-          <h2 class="mt-2 text-3xl font-semibold text-slate-950">Gudang</h2>
+          <h2 class="mt-2 text-3xl font-semibold text-slate-950">Roles</h2>
           <p class="mt-2 text-slate-600">
-            Kelola lokasi penyimpanan bahan baku, barang dalam proses, dan barang jadi.
+            Kelola grup akses pengguna dan permission yang melekat pada setiap role.
           </p>
         </div>
 
-        <Button v-if="canCreate" label="Tambah Gudang" @click="openCreateDialog" />
+        <Button v-if="canCreate" label="Tambah Role" @click="openCreateDialog" />
       </div>
 
       <Message v-if="errorMessage" class="mb-4" severity="error" :closable="false">
@@ -284,10 +316,8 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
         <Toolbar class="border-0 border-b border-slate-200 bg-white px-4 py-3">
           <template #start>
             <div>
-              <h3 class="text-base font-semibold text-slate-950">Daftar Gudang</h3>
-              <p class="mt-1 text-sm text-slate-500">
-                {{ pagination?.total ?? 0 }} gudang terdaftar
-              </p>
+              <h3 class="text-base font-semibold text-slate-950">Daftar Role</h3>
+              <p class="mt-1 text-sm text-slate-500">{{ roles.length }} role terdaftar</p>
             </div>
           </template>
           <template #end>
@@ -296,74 +326,56 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
               severity="secondary"
               outlined
               rounded
-              aria-label="Muat ulang data gudang"
-              title="Muat ulang data gudang"
+              aria-label="Muat ulang data role"
+              title="Muat ulang data role"
               :disabled="isLoading"
-              @click="loadWarehouses()"
+              @click="loadRoles()"
             />
           </template>
         </Toolbar>
 
         <DataTable
           :value="tableRows"
-          :lazy="true"
-          :paginator="Boolean(pagination && pagination.total > perPage)"
-          :rows="perPage"
-          :first="(currentPage - 1) * perPage"
           :sort-field="sortField"
           :sort-order="sortOrder"
-          :total-records="pagination?.total ?? 0"
           data-key="id"
           showGridlines
           row-hover
           responsive-layout="scroll"
-          paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-          current-page-report-template="Menampilkan {first} sampai {last} dari {totalRecords} gudang"
-          @page="handlePage"
           @sort="handleSort"
         >
           <template #empty>
-            <div class="py-8 text-center text-sm text-slate-500">Belum ada data gudang.</div>
+            <div class="py-8 text-center text-sm text-slate-500">Belum ada data role.</div>
           </template>
 
-          <Column field="name" header="Gudang" header-class="text-center" sortable>
+          <Column field="name" header="Role" header-class="text-center" sortable>
             <template #body="{ data }">
-              <Skeleton v-if="isLoadingRow(data)" height="1.25rem" width="11rem" />
+              <Skeleton v-if="isLoadingRow(data)" height="1.25rem" width="10rem" />
               <div v-else>
                 <p class="font-semibold text-slate-950">{{ data.name }}</p>
               </div>
             </template>
           </Column>
-          <Column field="location" header="Lokasi" header-class="text-center" sortable>
+          <Column header="Permissions" header-class="text-center">
             <template #body="{ data }">
-              <Skeleton v-if="isLoadingRow(data)" height="1.25rem" width="9rem" />
-              <span v-else class="text-slate-600">{{ data.location }}</span>
-            </template>
-          </Column>
-          <Column field="type" header="Tipe" header-class="text-center" sortable>
-            <template #body="{ data }">
-              <div class="flex justify-center">
-                <Skeleton
-                  v-if="isLoadingRow(data)"
-                  height="1.5rem"
-                  width="6.5rem"
-                  border-radius="999px"
-                />
-                <WarehouseTypeTag v-else :type="data.type" />
+              <div v-if="isLoadingRow(data)" class="flex flex-wrap gap-2">
+                <Skeleton height="1.5rem" width="6rem" border-radius="999px" />
+                <Skeleton height="1.5rem" width="7rem" border-radius="999px" />
               </div>
-            </template>
-          </Column>
-          <Column field="is_active" header="Status" header-class="text-center" sortable>
-            <template #body="{ data }">
-              <div class="flex justify-center">
-                <Skeleton
-                  v-if="isLoadingRow(data)"
-                  height="1.5rem"
-                  width="5rem"
-                  border-radius="999px"
+              <div v-else-if="formatPermissions(data).length" class="flex flex-wrap gap-2">
+                <Tag
+                  v-for="permission in formatPermissions(data).slice(0, 6)"
+                  :key="permission"
+                  :value="permission"
+                  severity="info"
                 />
-                <WarehouseStatusTag v-else :active="data.is_active" />
+                <Tag
+                  v-if="formatPermissions(data).length > 6"
+                  :value="`+${formatPermissions(data).length - 6}`"
+                  severity="secondary"
+                />
               </div>
+              <span v-else class="text-slate-500">Belum ada permission</span>
             </template>
           </Column>
           <Column field="created_at" header="Dibuat" header-class="text-center" sortable>
@@ -395,7 +407,7 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
                   size="small"
                   :loading="actionId === data.id"
                   :disabled="actionId === data.id"
-                  @click="confirmDeleteWarehouse(data)"
+                  @click="confirmDeleteRole(data)"
                 />
               </div>
             </template>
@@ -403,14 +415,16 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
         </DataTable>
       </div>
 
-      <WarehouseFormDialog
+      <RoleFormDialog
         v-model:visible="formDialogVisible"
         :mode="formMode"
-        :warehouse="selectedWarehouse"
+        :role="selectedRole"
+        :permissions="permissions"
         :submitting="isSubmitting"
+        :loading-permissions="isLoadingPermissions"
         :errors="validationErrors"
         :message="formErrorMessage"
-        @submit="saveWarehouse"
+        @submit="saveRole"
       />
 
       <ConfirmDialog />

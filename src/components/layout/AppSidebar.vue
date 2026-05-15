@@ -28,6 +28,11 @@ const navigationItems: NavigationItem[] = [
     to: '/dashboard',
   },
   {
+    label: 'Roles',
+    to: '/master/roles',
+    permission: 'roles.view',
+  },
+  {
     label: 'Gudang',
     to: '/master/warehouses',
     permission: 'warehouses.view',

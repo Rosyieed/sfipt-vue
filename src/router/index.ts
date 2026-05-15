@@ -33,6 +33,15 @@ const router = createRouter({
         permission: 'warehouses.view',
       },
     },
+    {
+      path: '/master/roles',
+      name: 'roles',
+      component: () => import('@/views/roles/RoleListView.vue'),
+      meta: {
+        requiresAuth: true,
+        permission: 'roles.view',
+      },
+    },
   ],
 })
 
