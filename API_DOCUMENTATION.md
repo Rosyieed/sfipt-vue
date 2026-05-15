@@ -51,7 +51,10 @@ Retrieve a paginated list of users.
 - **Endpoint**: `/admin/users`
 - **Headers**: `Authorization: Bearer {token}`
 - **Query Parameters**:
+  - `page` (integer, optional): Page number to retrieve. Default: 1.
   - `per_page` (integer, optional): Number of items per page. Default: 15. Min: 1, Max: 100.
+  - `sort` (string, optional): Sort field. One of `id`, `name`, `email`, `created_at`. Default: `name`.
+  - `direction` (string, optional): Sort direction. One of `asc`, `desc`. Default: `asc`.
 - **Response**: `200 OK` with paginated user list.
 
 ### Create User

@@ -11,3 +11,5 @@ export type ApiEnvelope<T> = {
   message: string
   data: T
 }
+
+export type SortDirection = 'asc' | 'desc'

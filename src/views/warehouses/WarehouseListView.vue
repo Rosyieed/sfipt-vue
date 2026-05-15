@@ -16,10 +16,9 @@ import WarehouseTypeTag from '@/components/warehouses/WarehouseTypeTag.vue'
 import { ApiError } from '@/services/apiClient'
 import * as warehouseService from '@/services/warehouseService'
 import { useAuthStore } from '@/stores/auth'
-import type { PaginatedData } from '@/types/api'
+import type { PaginatedData, SortDirection } from '@/types/api'
 import type { ApiValidationErrors } from '@/types/auth'
 import type {
-  SortDirection,
   Warehouse,
   WarehousePayload,
   WarehouseSortField,

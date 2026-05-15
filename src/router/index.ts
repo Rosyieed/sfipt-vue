@@ -25,6 +25,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/master/users',
+      name: 'users',
+      component: () => import('@/views/users/UserListView.vue'),
+      meta: {
+        requiresAuth: true,
+        permission: 'users.view',
+      },
+    },
+    {
       path: '/master/warehouses',
       name: 'warehouses',
       component: () => import('@/views/warehouses/WarehouseListView.vue'),

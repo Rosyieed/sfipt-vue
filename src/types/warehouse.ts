@@ -1,3 +1,5 @@
+import type { SortDirection } from '@/types/api'
+
 export type WarehouseType = 'raw' | 'wip' | 'finished'
 
 export type Warehouse = {
@@ -18,8 +20,6 @@ export type WarehousePayload = {
 }
 
 export type WarehouseSortField = 'id' | 'name' | 'location' | 'type' | 'is_active' | 'created_at'
-
-export type SortDirection = 'asc' | 'desc'
 
 export type WarehouseListParams = {
   page?: number
