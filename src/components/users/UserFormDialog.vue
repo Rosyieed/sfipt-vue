@@ -104,144 +104,123 @@ function normalizeNameList(items?: Array<string | Role | Permission>) {
     :visible="visible"
     modal
     :header="title"
-    class="w-[calc(100vw-2rem)] max-w-5xl"
+    class="w-[calc(100vw-2rem)] max-w-3xl"
     @update:visible="emit('update:visible', $event)"
   >
     <Message v-if="message" class="mb-4" severity="error" :closable="false">
       {{ message }}
     </Message>
 
-    <form class="grid gap-6 lg:grid-cols-[1fr_260px]" novalidate @submit.prevent="submitForm">
-      <div class="space-y-5">
-        <div class="grid gap-5 md:grid-cols-2">
-          <div class="space-y-2">
-            <label for="user-name" class="block text-sm font-medium text-slate-700">Nama</label>
-            <InputText
-              id="user-name"
-              v-model="form.name"
-              class="w-full"
-              :invalid="Boolean(getFieldError('name'))"
-              autocomplete="off"
-            />
-            <p v-if="getFieldError('name')" class="text-sm text-red-600">
-              {{ getFieldError('name') }}
-            </p>
-          </div>
-
-          <div class="space-y-2">
-            <label for="user-email" class="block text-sm font-medium text-slate-700">Email</label>
-            <InputText
-              id="user-email"
-              v-model="form.email"
-              class="w-full"
-              type="email"
-              :invalid="Boolean(getFieldError('email'))"
-              autocomplete="off"
-            />
-            <p v-if="getFieldError('email')" class="text-sm text-red-600">
-              {{ getFieldError('email') }}
-            </p>
-          </div>
+    <form class="space-y-5" novalidate @submit.prevent="submitForm">
+      <div class="grid gap-5 md:grid-cols-2">
+        <div class="space-y-2">
+          <label for="user-name" class="block text-sm font-medium text-slate-700">Nama</label>
+          <InputText
+            id="user-name"
+            v-model="form.name"
+            class="w-full"
+            :invalid="Boolean(getFieldError('name'))"
+            autocomplete="off"
+          />
+          <p v-if="getFieldError('name')" class="text-sm text-red-600">
+            {{ getFieldError('name') }}
+          </p>
         </div>
 
         <div class="space-y-2">
-          <label for="user-password" class="block text-sm font-medium text-slate-700">
-            Password
-          </label>
+          <label for="user-email" class="block text-sm font-medium text-slate-700">Email</label>
           <InputText
-            id="user-password"
-            v-model="form.password"
+            id="user-email"
+            v-model="form.email"
             class="w-full"
-            type="password"
-            :invalid="Boolean(getFieldError('password'))"
-            autocomplete="new-password"
+            type="email"
+            :invalid="Boolean(getFieldError('email'))"
+            autocomplete="off"
           />
-          <p v-if="getFieldError('password')" class="text-sm text-red-600">
-            {{ getFieldError('password') }}
+          <p v-if="getFieldError('email')" class="text-sm text-red-600">
+            {{ getFieldError('email') }}
           </p>
-          <p v-else class="text-sm text-slate-500">{{ passwordHelp }}</p>
-        </div>
-
-        <div class="grid gap-5 md:grid-cols-2">
-          <div class="space-y-2">
-            <label for="user-roles" class="block text-sm font-medium text-slate-700">Roles</label>
-            <MultiSelect
-              id="user-roles"
-              v-model="form.roles"
-              class="w-full"
-              append-to="body"
-              filter
-              :loading="loadingOptions"
-              :max-selected-labels="2"
-              :options="roleOptions"
-              option-label="label"
-              option-value="value"
-              panel-class="user-select-panel"
-              :panel-style="{ maxWidth: 'min(28rem, calc(100vw - 3rem))', width: '100%' }"
-              placeholder="Pilih role"
-              scroll-height="16rem"
-              selected-items-label="{0} role dipilih"
-              :invalid="Boolean(getFieldError('roles'))"
-            />
-            <p v-if="getFieldError('roles')" class="text-sm text-red-600">
-              {{ getFieldError('roles') }}
-            </p>
-          </div>
-
-          <div class="space-y-2">
-            <label for="user-permissions" class="block text-sm font-medium text-slate-700">
-              Permission Tambahan
-            </label>
-            <MultiSelect
-              id="user-permissions"
-              v-model="form.permissions"
-              class="w-full"
-              append-to="body"
-              filter
-              :loading="loadingOptions"
-              :max-selected-labels="2"
-              :options="permissionOptions"
-              option-label="label"
-              option-value="value"
-              panel-class="user-select-panel"
-              :panel-style="{ maxWidth: 'min(28rem, calc(100vw - 3rem))', width: '100%' }"
-              placeholder="Opsional"
-              scroll-height="16rem"
-              selected-items-label="{0} permission dipilih"
-              :invalid="Boolean(getFieldError('permissions'))"
-            />
-            <p v-if="getFieldError('permissions')" class="text-sm text-red-600">
-              {{ getFieldError('permissions') }}
-            </p>
-          </div>
         </div>
       </div>
 
-      <aside class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <p class="text-sm font-semibold text-slate-950">Pratinjau</p>
-        <div class="mt-5 space-y-4 text-sm">
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">User</p>
-            <p class="mt-1 font-semibold text-slate-950">{{ form.name || '-' }}</p>
-            <p class="mt-1 break-words text-slate-600">{{ form.email || '-' }}</p>
-          </div>
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Roles</p>
-            <p class="mt-1 break-words text-slate-700">
-              {{ form.roles.length ? form.roles.join(', ') : '-' }}
-            </p>
-          </div>
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">
-              Permission Tambahan
-            </p>
-            <p class="mt-1 text-slate-700">{{ form.permissions.length }} dipilih</p>
-          </div>
+      <div class="space-y-2">
+        <label for="user-password" class="block text-sm font-medium text-slate-700">
+          Password
+        </label>
+        <InputText
+          id="user-password"
+          v-model="form.password"
+          class="w-full"
+          type="password"
+          :invalid="Boolean(getFieldError('password'))"
+          autocomplete="new-password"
+        />
+        <p v-if="getFieldError('password')" class="text-sm text-red-600">
+          {{ getFieldError('password') }}
+        </p>
+        <p v-else class="text-sm text-slate-500">{{ passwordHelp }}</p>
+      </div>
+
+      <div class="grid gap-5 md:grid-cols-2">
+        <div class="space-y-2">
+          <label for="user-roles" class="block text-sm font-medium text-slate-700">Roles</label>
+          <MultiSelect
+            id="user-roles"
+            v-model="form.roles"
+            class="w-full"
+            append-to="body"
+            filter
+            :loading="loadingOptions"
+            :max-selected-labels="2"
+            :options="roleOptions"
+            option-label="label"
+            option-value="value"
+            panel-class="user-select-panel"
+            :panel-style="{ maxWidth: 'min(28rem, calc(100vw - 3rem))', width: '100%' }"
+            placeholder="Pilih role"
+            scroll-height="16rem"
+            selected-items-label="{0} role dipilih"
+            :invalid="Boolean(getFieldError('roles'))"
+          />
+          <p v-if="getFieldError('roles')" class="text-sm text-red-600">
+            {{ getFieldError('roles') }}
+          </p>
+          <p v-else class="text-sm text-slate-500">{{ form.roles.length }} role dipilih</p>
         </div>
-      </aside>
+
+        <div class="space-y-2">
+          <label for="user-permissions" class="block text-sm font-medium text-slate-700">
+            Permission Tambahan
+          </label>
+          <MultiSelect
+            id="user-permissions"
+            v-model="form.permissions"
+            class="w-full"
+            append-to="body"
+            filter
+            :loading="loadingOptions"
+            :max-selected-labels="2"
+            :options="permissionOptions"
+            option-label="label"
+            option-value="value"
+            panel-class="user-select-panel"
+            :panel-style="{ maxWidth: 'min(28rem, calc(100vw - 3rem))', width: '100%' }"
+            placeholder="Opsional"
+            scroll-height="16rem"
+            selected-items-label="{0} permission dipilih"
+            :invalid="Boolean(getFieldError('permissions'))"
+          />
+          <p v-if="getFieldError('permissions')" class="text-sm text-red-600">
+            {{ getFieldError('permissions') }}
+          </p>
+          <p v-else class="text-sm text-slate-500">
+            {{ form.permissions.length }} permission tambahan dipilih
+          </p>
+        </div>
+      </div>
 
       <div
-        class="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end lg:col-span-2"
+        class="flex flex-col-reverse gap-3 border-t border-teal-900/10 pt-5 sm:flex-row sm:justify-end"
       >
         <Button label="Batal" severity="secondary" outlined type="button" @click="closeDialog" />
         <Button type="submit" :label="submitLabel" :loading="submitting" :disabled="submitting" />

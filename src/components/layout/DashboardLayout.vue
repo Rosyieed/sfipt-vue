@@ -37,7 +37,7 @@ function syncSidebarWithViewport(event: MediaQueryList | MediaQueryListEvent) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-slate-50 text-slate-950">
+  <div class="min-h-screen text-slate-950">
     <AppSidebar :open="sidebarOpen" :close-on-menu-click="!isDesktop" @close="sidebarOpen = false" />
 
     <div

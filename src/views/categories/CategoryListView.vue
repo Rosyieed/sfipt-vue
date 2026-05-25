@@ -212,12 +212,12 @@ function isLoadingRow(row: CategoryTableRow): row is CategoryLoadingRow {
 
 <template>
   <DashboardLayout>
-    <section class="mx-auto max-w-7xl">
-      <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+    <section class="app-page">
+      <div class="app-page-header">
         <div>
-          <p class="text-sm font-medium uppercase tracking-[0.2em] text-teal-700">Master</p>
-          <h2 class="mt-2 text-3xl font-semibold text-slate-950">Kategori</h2>
-          <p class="mt-2 text-slate-600">
+          <p class="app-eyebrow">Master</p>
+          <h2 class="app-page-title">Kategori</h2>
+          <p class="app-page-description">
             Kelola kategori material dan barang untuk kebutuhan inventori produksi.
           </p>
         </div>
@@ -232,8 +232,8 @@ function isLoadingRow(row: CategoryTableRow): row is CategoryLoadingRow {
         {{ successMessage }}
       </Message>
 
-      <div class="overflow-hidden rounded-lg border border-slate-200 bg-white shadow-sm">
-        <Toolbar class="border-0 border-b border-slate-200 bg-white px-4 py-3">
+      <div class="app-data-panel">
+        <Toolbar>
           <template #start>
             <div>
               <h3 class="text-base font-semibold text-slate-950">Daftar Kategori</h3>
@@ -275,7 +275,7 @@ function isLoadingRow(row: CategoryTableRow): row is CategoryLoadingRow {
           @sort="handleSort"
         >
           <template #empty>
-            <div class="py-8 text-center text-sm text-slate-500">Belum ada data kategori.</div>
+            <div class="app-empty-state">Belum ada data kategori.</div>
           </template>
 
           <Column field="code" header="Kode" header-class="text-center" sortable>

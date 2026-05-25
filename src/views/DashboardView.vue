@@ -50,13 +50,15 @@ onMounted(async () => {
 
 <template>
   <DashboardLayout>
-    <section class="mx-auto max-w-6xl">
-      <div class="mb-6">
-        <p class="text-sm font-medium uppercase tracking-[0.2em] text-teal-700">Selamat datang</p>
-        <h2 class="mt-2 text-3xl font-semibold">Halo, {{ authStore.userName }}</h2>
-        <p class="mt-2 text-slate-600">
+    <section class="app-page max-w-6xl">
+      <div class="app-page-header">
+        <div>
+          <p class="app-eyebrow">Selamat datang</p>
+          <h2 class="app-page-title">Halo, {{ authStore.userName }}</h2>
+          <p class="app-page-description">
           Berikut ringkasan sederhana dari profil dan akses akun yang diterima dari API.
-        </p>
+          </p>
+        </div>
       </div>
 
       <Message v-if="profileError" class="mb-6" severity="warn" :closable="false">
@@ -64,11 +66,11 @@ onMounted(async () => {
       </Message>
 
       <div class="grid gap-4 md:grid-cols-3">
-        <Card v-for="item in stats" :key="item.label">
+        <Card v-for="item in stats" :key="item.label" class="app-stat-card">
           <template #content>
-            <p class="text-sm font-medium text-slate-500">{{ item.label }}</p>
-            <p class="mt-3 text-3xl font-semibold text-slate-950">{{ item.value }}</p>
-            <p class="mt-2 text-sm text-slate-500">{{ item.description }}</p>
+            <p class="relative z-10 text-sm font-bold text-slate-500">{{ item.label }}</p>
+            <p class="relative z-10 mt-3 text-3xl font-extrabold text-slate-950">{{ item.value }}</p>
+            <p class="relative z-10 mt-2 text-sm leading-6 text-slate-500">{{ item.description }}</p>
           </template>
         </Card>
       </div>

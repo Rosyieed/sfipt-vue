@@ -78,13 +78,13 @@ function getApiErrorMessage(error: ApiError) {
 </script>
 
 <template>
-  <main class="min-h-screen bg-white text-slate-950">
+  <main class="min-h-screen text-slate-950">
     <section class="grid min-h-screen lg:grid-cols-[3fr_2fr]">
       <div
-        class="relative hidden overflow-hidden border-r border-slate-200 bg-slate-950 px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between"
+        class="relative hidden overflow-hidden border-r border-white/10 bg-slate-950 px-12 py-10 text-white lg:flex lg:flex-col lg:justify-between"
       >
         <div
-          class="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.98)_0%,rgba(15,118,110,0.82)_52%,rgba(14,165,233,0.72)_100%)]"
+          class="absolute inset-0 bg-[linear-gradient(135deg,rgba(15,23,42,0.98)_0%,rgba(15,118,110,0.88)_48%,rgba(8,145,178,0.82)_100%)]"
         ></div>
         <div
           class="absolute inset-0 opacity-20 [background-image:linear-gradient(rgba(255,255,255,0.16)_1px,transparent_1px),linear-gradient(90deg,rgba(255,255,255,0.16)_1px,transparent_1px)] [background-size:42px_42px]"
@@ -113,7 +113,7 @@ function getApiErrorMessage(error: ApiError) {
           </p>
 
           <div
-            class="mt-10 max-w-xl overflow-hidden rounded-lg border border-white/15 bg-white/10 shadow-2xl shadow-slate-950/20 backdrop-blur"
+          class="mt-10 max-w-xl overflow-hidden rounded-2xl border border-white/15 bg-white/10 shadow-2xl shadow-slate-950/20 backdrop-blur"
           >
             <div class="flex items-center justify-between border-b border-white/10 px-5 py-4">
               <div>
@@ -193,10 +193,10 @@ function getApiErrorMessage(error: ApiError) {
             </h1>
           </div>
 
-          <div class="rounded-lg border border-slate-200 bg-white p-6 shadow-sm sm:p-8">
+          <div class="rounded-2xl border border-teal-900/10 bg-white/88 p-6 shadow-2xl shadow-teal-950/10 backdrop-blur sm:p-8">
             <div class="mb-8 hidden lg:block">
               <p class="text-sm font-medium uppercase tracking-[0.2em] text-teal-700">S-FIPT</p>
-              <h2 class="mt-3 text-3xl font-semibold text-slate-950">Masuk ke sistem</h2>
+              <h2 class="mt-3 text-3xl font-extrabold text-slate-950">Masuk ke sistem</h2>
               <p class="mt-2 text-sm text-slate-500">
                 Gunakan kredensial untuk mengakses inventory dan production tracking.
               </p>

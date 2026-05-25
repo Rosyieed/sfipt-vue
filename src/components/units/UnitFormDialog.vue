@@ -6,7 +6,6 @@ import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
-import ActiveStatusTag from '@/components/common/ActiveStatusTag.vue'
 import type { ApiValidationErrors } from '@/types/auth'
 import type { Unit, UnitPayload } from '@/types/unit'
 
@@ -72,105 +71,79 @@ function getFieldError(field: keyof UnitPayload) {
     :visible="visible"
     modal
     :header="title"
-    class="w-[calc(100vw-2rem)] max-w-3xl"
+    class="w-[calc(100vw-2rem)] max-w-2xl"
     @update:visible="emit('update:visible', $event)"
   >
     <Message v-if="message" class="mb-4" severity="error" :closable="false">
       {{ message }}
     </Message>
 
-    <form class="grid gap-6 lg:grid-cols-[1fr_240px]" novalidate @submit.prevent="submitForm">
-      <div class="space-y-5">
-        <div class="grid gap-5 md:grid-cols-2">
-          <div class="space-y-2">
-            <label for="unit-code" class="block text-sm font-medium text-slate-700">
-              Kode
-            </label>
-            <InputText
-              id="unit-code"
-              v-model="form.code"
-              class="w-full"
-              :invalid="Boolean(getFieldError('code'))"
-              autocomplete="off"
-            />
-            <p v-if="getFieldError('code')" class="text-sm text-red-600">
-              {{ getFieldError('code') }}
-            </p>
-          </div>
-
-          <div class="space-y-2">
-            <label for="unit-name" class="block text-sm font-medium text-slate-700">
-              Nama
-            </label>
-            <InputText
-              id="unit-name"
-              v-model="form.name"
-              class="w-full"
-              :invalid="Boolean(getFieldError('name'))"
-              autocomplete="off"
-            />
-            <p v-if="getFieldError('name')" class="text-sm text-red-600">
-              {{ getFieldError('name') }}
-            </p>
-          </div>
-        </div>
-
+    <form class="space-y-5" novalidate @submit.prevent="submitForm">
+      <div class="grid gap-5 md:grid-cols-2">
         <div class="space-y-2">
-          <label for="unit-description" class="block text-sm font-medium text-slate-700">
-            Deskripsi
+          <label for="unit-code" class="block text-sm font-medium text-slate-700">
+            Kode
           </label>
-          <Textarea
-            id="unit-description"
-            v-model="form.description"
+          <InputText
+            id="unit-code"
+            v-model="form.code"
             class="w-full"
-            rows="4"
-            :invalid="Boolean(getFieldError('description'))"
-            auto-resize
+            :invalid="Boolean(getFieldError('code'))"
+            autocomplete="off"
           />
-          <p v-if="getFieldError('description')" class="text-sm text-red-600">
-            {{ getFieldError('description') }}
+          <p v-if="getFieldError('code')" class="text-sm text-red-600">
+            {{ getFieldError('code') }}
           </p>
         </div>
 
-        <div
-          class="flex items-center justify-between rounded-lg border border-slate-200 bg-slate-50 px-4 py-3"
-        >
-          <div>
-            <label for="unit-active" class="text-sm font-medium text-slate-800">
-              Status aktif
-            </label>
-            <p class="mt-1 text-sm text-slate-500">
-              Nonaktifkan jika satuan belum digunakan operasional.
-            </p>
-          </div>
-          <ToggleSwitch v-model="form.is_active" input-id="unit-active" />
+        <div class="space-y-2">
+          <label for="unit-name" class="block text-sm font-medium text-slate-700">
+            Nama
+          </label>
+          <InputText
+            id="unit-name"
+            v-model="form.name"
+            class="w-full"
+            :invalid="Boolean(getFieldError('name'))"
+            autocomplete="off"
+          />
+          <p v-if="getFieldError('name')" class="text-sm text-red-600">
+            {{ getFieldError('name') }}
+          </p>
         </div>
       </div>
 
-      <aside class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <p class="text-sm font-semibold text-slate-950">Pratinjau</p>
-        <div class="mt-5 space-y-4 text-sm">
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Kode</p>
-            <p class="mt-1 font-semibold text-slate-950">{{ form.code || '-' }}</p>
-          </div>
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Satuan</p>
-            <p class="mt-1 font-semibold text-slate-950">{{ form.name || '-' }}</p>
-          </div>
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Deskripsi</p>
-            <p class="mt-1 text-slate-700">{{ form.description || '-' }}</p>
-          </div>
-          <div>
-            <p class="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Status</p>
-            <ActiveStatusTag :active="form.is_active" />
-          </div>
+      <div class="space-y-2">
+        <label for="unit-description" class="block text-sm font-medium text-slate-700">
+          Deskripsi
+        </label>
+        <Textarea
+          id="unit-description"
+          v-model="form.description"
+          class="w-full"
+          rows="4"
+          :invalid="Boolean(getFieldError('description'))"
+          auto-resize
+        />
+        <p v-if="getFieldError('description')" class="text-sm text-red-600">
+          {{ getFieldError('description') }}
+        </p>
+      </div>
+
+      <div class="app-toggle-panel flex items-center justify-between">
+        <div>
+          <label for="unit-active" class="text-sm font-medium text-slate-800">
+            Status aktif
+          </label>
+          <p class="mt-1 text-sm text-slate-500">
+            Nonaktifkan jika satuan belum digunakan operasional.
+          </p>
         </div>
-      </aside>
+        <ToggleSwitch v-model="form.is_active" input-id="unit-active" />
+      </div>
 
       <div
-        class="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end lg:col-span-2"
+        class="flex flex-col-reverse gap-3 border-t border-teal-900/10 pt-5 sm:flex-row sm:justify-end"
       >
         <Button label="Batal" severity="secondary" outlined type="button" @click="closeDialog" />
         <Button type="submit" :label="submitLabel" :loading="submitting" :disabled="submitting" />

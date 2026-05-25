@@ -45,7 +45,7 @@ function toggleUserMenu(event: MouseEvent) {
 </script>
 
 <template>
-  <header class="sticky top-0 z-20 border-b border-slate-200 bg-white">
+  <header class="sticky top-0 z-20 border-b border-teal-900/10 bg-white/78 backdrop-blur-xl">
     <div class="flex h-16 items-center justify-between px-4 lg:px-6">
       <div class="flex items-center gap-3">
         <Button
@@ -62,37 +62,35 @@ function toggleUserMenu(event: MouseEvent) {
           </span>
         </Button>
         <div>
-          <p class="text-xs font-medium uppercase tracking-[0.18em] text-teal-700">S-FIPT</p>
-          <h1 class="text-lg font-semibold text-slate-950">Dashboard</h1>
+          <p class="text-xs font-extrabold uppercase tracking-[0.18em] text-teal-700">S-FIPT</p>
+          <h1 class="text-lg font-bold text-slate-950">Admin Portal</h1>
         </div>
       </div>
 
       <div class="flex items-center">
         <button
           type="button"
-          class="flex items-center gap-3 rounded-lg px-2 py-1.5 text-left transition hover:bg-slate-100 focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
+          class="flex items-center gap-3 rounded-xl border border-transparent px-2 py-1.5 text-left transition hover:border-teal-900/10 hover:bg-white/85 hover:shadow-sm focus:outline-none focus:ring-2 focus:ring-teal-500 focus:ring-offset-2"
           aria-haspopup="menu"
           :aria-expanded="isUserMenuOpen"
           aria-controls="user-menu"
           @click="toggleUserMenu"
         >
           <span
-            class="flex h-9 w-9 items-center justify-center rounded-full bg-teal-600 text-sm font-semibold text-white"
+            class="flex h-9 w-9 items-center justify-center rounded-full bg-gradient-to-br from-teal-600 to-cyan-600 text-sm font-bold text-white shadow-md shadow-cyan-900/15"
             aria-hidden="true"
           >
             {{ userInitials }}
           </span>
           <span class="hidden text-right sm:block">
-            <span class="block text-sm font-medium text-slate-950">{{ userName }}</span>
+            <span class="block text-sm font-bold text-slate-950">{{ userName }}</span>
             <span class="block text-xs text-slate-500">Signed in</span>
           </span>
-          <span
-            class="text-sm text-slate-500 transition"
+          <i
+            class="pi pi-chevron-down text-xs text-slate-500 transition"
             :class="{ 'rotate-180': isUserMenuOpen }"
             aria-hidden="true"
-          >
-            ▾
-          </span>
+          ></i>
         </button>
         <Menu
           id="user-menu"

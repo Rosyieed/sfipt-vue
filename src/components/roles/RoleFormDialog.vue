@@ -41,20 +41,6 @@ const permissionOptions = computed(() =>
   })),
 )
 
-const selectedPermissionGroups = computed(() => {
-  const groups = new Map<string, string[]>()
-
-  form.permissions.forEach((permission) => {
-    const [group = 'lainnya'] = permission.split('.')
-    groups.set(group, [...(groups.get(group) ?? []), permission])
-  })
-
-  return Array.from(groups.entries()).map(([group, permissions]) => ({
-    group,
-    permissions: permissions.sort(),
-  }))
-})
-
 watch(
   () => [props.visible, props.role, props.mode] as const,
   () => {
@@ -99,83 +85,60 @@ function normalizePermissions(permissions?: Role['permissions']) {
     :visible="visible"
     modal
     :header="title"
-    class="w-[calc(100vw-2rem)] max-w-5xl"
+    class="w-[calc(100vw-2rem)] max-w-3xl"
     @update:visible="emit('update:visible', $event)"
   >
     <Message v-if="message" class="mb-4" severity="error" :closable="false">
       {{ message }}
     </Message>
 
-    <form class="grid gap-6 lg:grid-cols-[1fr_240px]" novalidate @submit.prevent="submitForm">
-      <div class="space-y-5">
-        <div class="space-y-2">
-          <label for="role-name" class="block text-sm font-medium text-slate-700">Nama Role</label>
-          <InputText
-            id="role-name"
-            v-model="form.name"
-            class="w-full"
-            :invalid="Boolean(getFieldError('name'))"
-            autocomplete="off"
-          />
-          <p v-if="getFieldError('name')" class="text-sm text-red-600">
-            {{ getFieldError('name') }}
-          </p>
-        </div>
-
-        <div class="space-y-2">
-          <label for="role-permissions" class="block text-sm font-medium text-slate-700">
-            Permissions
-          </label>
-          <MultiSelect
-            id="role-permissions"
-            v-model="form.permissions"
-            class="w-full"
-            append-to="body"
-            filter
-            :loading="loadingPermissions"
-            :max-selected-labels="3"
-            :options="permissionOptions"
-            option-label="label"
-            option-value="value"
-            panel-class="role-permission-panel"
-            :panel-style="{ maxWidth: 'min(42rem, calc(100vw - 3rem))', width: '100%' }"
-            placeholder="Pilih permission"
-            scroll-height="18rem"
-            selected-items-label="{0} permission dipilih"
-            :invalid="Boolean(getFieldError('permissions'))"
-          />
-          <p v-if="getFieldError('permissions')" class="text-sm text-red-600">
-            {{ getFieldError('permissions') }}
-          </p>
-        </div>
+    <form class="space-y-5" novalidate @submit.prevent="submitForm">
+      <div class="space-y-2">
+        <label for="role-name" class="block text-sm font-medium text-slate-700">Nama Role</label>
+        <InputText
+          id="role-name"
+          v-model="form.name"
+          class="w-full"
+          :invalid="Boolean(getFieldError('name'))"
+          autocomplete="off"
+        />
+        <p v-if="getFieldError('name')" class="text-sm text-red-600">
+          {{ getFieldError('name') }}
+        </p>
       </div>
 
-      <aside class="rounded-lg border border-slate-200 bg-slate-50 p-4">
-        <p class="text-sm font-semibold text-slate-950">Pratinjau</p>
-        <div class="mt-5 space-y-4 text-sm">
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Role</p>
-            <p class="mt-1 font-semibold text-slate-950">{{ form.name || '-' }}</p>
-          </div>
-          <div>
-            <p class="text-xs font-medium uppercase tracking-wide text-slate-400">Permissions</p>
-            <p class="mt-1 text-slate-700">{{ form.permissions.length }} dipilih</p>
-          </div>
-          <div v-if="selectedPermissionGroups.length" class="space-y-2">
-            <div v-for="group in selectedPermissionGroups" :key="group.group">
-              <p class="text-xs font-semibold uppercase tracking-wide text-slate-500">
-                {{ group.group }}
-              </p>
-              <p class="mt-1 wrap-break-words text-xs leading-5 text-slate-600">
-                {{ group.permissions.join(', ') }}
-              </p>
-            </div>
-          </div>
-        </div>
-      </aside>
+      <div class="space-y-2">
+        <label for="role-permissions" class="block text-sm font-medium text-slate-700">
+          Permissions
+        </label>
+        <MultiSelect
+          id="role-permissions"
+          v-model="form.permissions"
+          class="w-full"
+          append-to="body"
+          filter
+          :loading="loadingPermissions"
+          :max-selected-labels="3"
+          :options="permissionOptions"
+          option-label="label"
+          option-value="value"
+          panel-class="role-permission-panel"
+          :panel-style="{ maxWidth: 'min(42rem, calc(100vw - 3rem))', width: '100%' }"
+          placeholder="Pilih permission"
+          scroll-height="18rem"
+          selected-items-label="{0} permission dipilih"
+          :invalid="Boolean(getFieldError('permissions'))"
+        />
+        <p v-if="getFieldError('permissions')" class="text-sm text-red-600">
+          {{ getFieldError('permissions') }}
+        </p>
+        <p v-else class="text-sm text-slate-500">
+          {{ form.permissions.length }} permission dipilih
+        </p>
+      </div>
 
       <div
-        class="flex flex-col-reverse gap-3 border-t border-slate-200 pt-5 sm:flex-row sm:justify-end lg:col-span-2"
+        class="flex flex-col-reverse gap-3 border-t border-teal-900/10 pt-5 sm:flex-row sm:justify-end"
       >
         <Button label="Batal" severity="secondary" outlined type="button" @click="closeDialog" />
         <Button type="submit" :label="submitLabel" :loading="submitting" :disabled="submitting" />
