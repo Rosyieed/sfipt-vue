@@ -42,6 +42,11 @@ const navigationItems: NavigationItem[] = [
     to: '/master/warehouses',
     permission: 'warehouses.view',
   },
+  {
+    label: 'Kategori',
+    to: '/master/categories',
+    permission: 'categories.view',
+  },
 ]
 
 const visibleNavigationItems = computed(() =>

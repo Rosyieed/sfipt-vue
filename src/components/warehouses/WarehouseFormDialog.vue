@@ -6,7 +6,7 @@ import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Select from 'primevue/select'
 import ToggleSwitch from 'primevue/toggleswitch'
-import WarehouseStatusTag from '@/components/warehouses/WarehouseStatusTag.vue'
+import ActiveStatusTag from '@/components/common/ActiveStatusTag.vue'
 import WarehouseTypeTag from '@/components/warehouses/WarehouseTypeTag.vue'
 import type { ApiValidationErrors } from '@/types/auth'
 import type { Warehouse, WarehousePayload, WarehouseType } from '@/types/warehouse'
@@ -169,7 +169,7 @@ function getFieldError(field: keyof WarehousePayload) {
           </div>
           <div>
             <p class="mb-2 text-xs font-medium uppercase tracking-wide text-slate-400">Status</p>
-            <WarehouseStatusTag :active="form.is_active" />
+            <ActiveStatusTag :active="form.is_active" />
           </div>
         </div>
       </aside>

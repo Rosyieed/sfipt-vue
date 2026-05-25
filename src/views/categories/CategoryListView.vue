@@ -3,61 +3,50 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
-import ConfirmDialog from 'primevue/confirmdialog'
-import { useConfirm } from 'primevue/useconfirm'
 import DataTable from 'primevue/datatable'
 import Message from 'primevue/message'
 import Skeleton from 'primevue/skeleton'
 import Toolbar from 'primevue/toolbar'
+import CategoryFormDialog from '@/components/categories/CategoryFormDialog.vue'
 import ActiveStatusTag from '@/components/common/ActiveStatusTag.vue'
 import DashboardLayout from '@/components/layout/DashboardLayout.vue'
-import WarehouseFormDialog from '@/components/warehouses/WarehouseFormDialog.vue'
-import WarehouseTypeTag from '@/components/warehouses/WarehouseTypeTag.vue'
 import { ApiError } from '@/services/apiClient'
-import * as warehouseService from '@/services/warehouseService'
+import * as categoryService from '@/services/categoryService'
 import { useAuthStore } from '@/stores/auth'
 import type { PaginatedData, SortDirection } from '@/types/api'
 import type { ApiValidationErrors } from '@/types/auth'
-import type {
-  Warehouse,
-  WarehousePayload,
-  WarehouseSortField,
-} from '@/types/warehouse'
+import type { Category, CategoryPayload, CategorySortField } from '@/types/category'
 
-type WarehouseLoadingRow = {
+type CategoryLoadingRow = {
   id: string
   __loading: true
 }
 
-type WarehouseTableRow = Warehouse | WarehouseLoadingRow
+type CategoryTableRow = Category | CategoryLoadingRow
 
 const authStore = useAuthStore()
 const router = useRouter()
-const confirm = useConfirm()
 
-const warehouses = ref<Warehouse[]>([])
-const pagination = ref<PaginatedData<Warehouse> | null>(null)
+const categories = ref<Category[]>([])
+const pagination = ref<PaginatedData<Category> | null>(null)
 const isLoading = ref(false)
-const actionId = ref<number | null>(null)
 const errorMessage = ref('')
 const successMessage = ref('')
 const formErrorMessage = ref('')
 const validationErrors = ref<ApiValidationErrors>({})
 const formMode = ref<'create' | 'edit'>('create')
-const selectedWarehouse = ref<Warehouse | null>(null)
+const selectedCategory = ref<Category | null>(null)
 const formDialogVisible = ref(false)
 const isSubmitting = ref(false)
 const currentPage = ref(1)
 const perPage = 10
-const sortField = ref<WarehouseSortField>('name')
+const sortField = ref<CategorySortField>('code')
 const sortDirection = ref<SortDirection>('asc')
 const sortOrder = ref<1 | -1>(1)
 
-const canCreate = computed(() => authStore.hasPermission('warehouses.create'))
-const canUpdate = computed(() => authStore.hasPermission('warehouses.update'))
-const canDelete = computed(() => authStore.hasPermission('warehouses.delete'))
-const canManage = computed(() => canUpdate.value || canDelete.value)
-const tableRows = computed<WarehouseTableRow[]>(() => {
+const canCreate = computed(() => authStore.hasPermission('categories.create'))
+const canUpdate = computed(() => authStore.hasPermission('categories.update'))
+const tableRows = computed<CategoryTableRow[]>(() => {
   if (isLoading.value) {
     return Array.from({ length: perPage }, (_, index) => ({
       id: `loading-${index}`,
@@ -65,14 +54,14 @@ const tableRows = computed<WarehouseTableRow[]>(() => {
     }))
   }
 
-  return warehouses.value
+  return categories.value
 })
 
 onMounted(() => {
-  void loadWarehouses()
+  void loadCategories()
 })
 
-async function loadWarehouses(page = currentPage.value) {
+async function loadCategories(page = currentPage.value) {
   if (!authStore.token) {
     await router.push('/login')
     return
@@ -82,13 +71,13 @@ async function loadWarehouses(page = currentPage.value) {
   errorMessage.value = ''
 
   try {
-    const result = await warehouseService.getWarehouses(authStore.token, {
+    const result = await categoryService.getCategories(authStore.token, {
       page,
       perPage,
       sort: sortField.value,
       direction: sortDirection.value,
     })
-    warehouses.value = result.data
+    categories.value = result.data
     pagination.value = result
     currentPage.value = result.current_page
   } catch (error) {
@@ -99,40 +88,40 @@ async function loadWarehouses(page = currentPage.value) {
 }
 
 function handlePage(event: { page?: number }) {
-  void loadWarehouses((event.page ?? 0) + 1)
+  void loadCategories((event.page ?? 0) + 1)
 }
 
 function handleSort(event: {
-  sortField?: string | ((item: Warehouse) => unknown)
+  sortField?: string | ((item: Category) => unknown)
   sortOrder?: number | null
 }) {
-  if (typeof event.sortField !== 'string' || !isWarehouseSortField(event.sortField)) {
+  if (typeof event.sortField !== 'string' || !isCategorySortField(event.sortField)) {
     return
   }
 
   sortField.value = event.sortField
   sortOrder.value = event.sortOrder === -1 ? -1 : 1
   sortDirection.value = sortOrder.value === -1 ? 'desc' : 'asc'
-  void loadWarehouses(1)
+  void loadCategories(1)
 }
 
 function openCreateDialog() {
   formMode.value = 'create'
-  selectedWarehouse.value = null
+  selectedCategory.value = null
   formErrorMessage.value = ''
   validationErrors.value = {}
   formDialogVisible.value = true
 }
 
-function openEditDialog(warehouse: Warehouse) {
+function openEditDialog(category: Category) {
   formMode.value = 'edit'
-  selectedWarehouse.value = warehouse
+  selectedCategory.value = category
   formErrorMessage.value = ''
   validationErrors.value = {}
   formDialogVisible.value = true
 }
 
-async function saveWarehouse(payload: WarehousePayload) {
+async function saveCategory(payload: CategoryPayload) {
   if (!authStore.token) {
     await router.push('/login')
     return
@@ -145,60 +134,20 @@ async function saveWarehouse(payload: WarehousePayload) {
   validationErrors.value = {}
 
   try {
-    if (formMode.value === 'edit' && selectedWarehouse.value) {
-      await warehouseService.updateWarehouse(authStore.token, selectedWarehouse.value.id, payload)
-      successMessage.value = 'Gudang berhasil diperbarui.'
+    if (formMode.value === 'edit' && selectedCategory.value) {
+      await categoryService.updateCategory(authStore.token, selectedCategory.value.id, payload)
+      successMessage.value = 'Kategori berhasil diperbarui.'
     } else {
-      await warehouseService.createWarehouse(authStore.token, payload)
-      successMessage.value = 'Gudang berhasil ditambahkan.'
+      await categoryService.createCategory(authStore.token, payload)
+      successMessage.value = 'Kategori berhasil ditambahkan.'
     }
 
     formDialogVisible.value = false
-    await loadWarehouses()
+    await loadCategories()
   } catch (error) {
     await handleApiError(error, 'form')
   } finally {
     isSubmitting.value = false
-  }
-}
-
-function confirmDeleteWarehouse(warehouse: Warehouse) {
-  confirm.require({
-    header: 'Hapus Gudang',
-    message: `Apakah Anda yakin ingin menghapus gudang "${warehouse.name}"?`,
-    icon: 'pi pi-exclamation-triangle',
-    rejectLabel: 'Batal',
-    acceptLabel: 'Hapus',
-    rejectProps: {
-      severity: 'secondary',
-      outlined: true,
-    },
-    acceptProps: {
-      severity: 'danger',
-    },
-    accept: () => {
-      void deleteWarehouse(warehouse)
-    },
-  })
-}
-
-async function deleteWarehouse(warehouse: Warehouse) {
-  if (!authStore.token) {
-    return
-  }
-
-  actionId.value = warehouse.id
-  errorMessage.value = ''
-  successMessage.value = ''
-
-  try {
-    await warehouseService.deleteWarehouse(authStore.token, warehouse.id)
-    successMessage.value = 'Gudang berhasil dihapus.'
-    await loadWarehouses()
-  } catch (error) {
-    await handleApiError(error, 'page')
-  } finally {
-    actionId.value = null
   }
 }
 
@@ -211,7 +160,7 @@ async function handleApiError(error: unknown, target: 'page' | 'form' = 'page') 
     }
 
     if (error.status === 403) {
-      const message = 'Anda tidak memiliki akses untuk mengelola data gudang.'
+      const message = 'Anda tidak memiliki akses untuk mengelola data kategori.'
       if (target === 'form') {
         formErrorMessage.value = message
       } else {
@@ -229,7 +178,7 @@ async function handleApiError(error: unknown, target: 'page' | 'form' = 'page') 
     return
   }
 
-  const message = 'Data gudang belum bisa diproses. Silakan coba lagi.'
+  const message = 'Data kategori belum bisa diproses. Silakan coba lagi.'
   if (target === 'form') {
     formErrorMessage.value = message
   } else {
@@ -248,11 +197,15 @@ function formatDate(value?: string) {
   }).format(new Date(value))
 }
 
-function isWarehouseSortField(value: string): value is WarehouseSortField {
-  return ['id', 'name', 'location', 'type', 'is_active', 'created_at'].includes(value)
+function formatDescription(value: string | null) {
+  return value?.trim() || '-'
 }
 
-function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
+function isCategorySortField(value: string): value is CategorySortField {
+  return ['id', 'code', 'name', 'is_active', 'created_at'].includes(value)
+}
+
+function isLoadingRow(row: CategoryTableRow): row is CategoryLoadingRow {
   return '__loading' in row
 }
 </script>
@@ -263,13 +216,13 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
       <div class="mb-6 flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <div>
           <p class="text-sm font-medium uppercase tracking-[0.2em] text-teal-700">Master</p>
-          <h2 class="mt-2 text-3xl font-semibold text-slate-950">Gudang</h2>
+          <h2 class="mt-2 text-3xl font-semibold text-slate-950">Kategori</h2>
           <p class="mt-2 text-slate-600">
-            Kelola lokasi penyimpanan bahan baku, barang dalam proses, dan barang jadi.
+            Kelola kategori material dan barang untuk kebutuhan inventori produksi.
           </p>
         </div>
 
-        <Button v-if="canCreate" label="Tambah Gudang" @click="openCreateDialog" />
+        <Button v-if="canCreate" label="Tambah Kategori" @click="openCreateDialog" />
       </div>
 
       <Message v-if="errorMessage" class="mb-4" severity="error" :closable="false">
@@ -283,9 +236,9 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
         <Toolbar class="border-0 border-b border-slate-200 bg-white px-4 py-3">
           <template #start>
             <div>
-              <h3 class="text-base font-semibold text-slate-950">Daftar Gudang</h3>
+              <h3 class="text-base font-semibold text-slate-950">Daftar Kategori</h3>
               <p class="mt-1 text-sm text-slate-500">
-                {{ pagination?.total ?? 0 }} gudang terdaftar
+                {{ pagination?.total ?? 0 }} kategori terdaftar
               </p>
             </div>
           </template>
@@ -295,10 +248,10 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
               severity="secondary"
               outlined
               rounded
-              aria-label="Muat ulang data gudang"
-              title="Muat ulang data gudang"
+              aria-label="Muat ulang data kategori"
+              title="Muat ulang data kategori"
               :disabled="isLoading"
-              @click="loadWarehouses()"
+              @click="loadCategories()"
             />
           </template>
         </Toolbar>
@@ -317,39 +270,30 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
           row-hover
           responsive-layout="scroll"
           paginatorTemplate="RowsPerPageDropdown FirstPageLink PrevPageLink CurrentPageReport NextPageLink LastPageLink"
-          current-page-report-template="Menampilkan {first} sampai {last} dari {totalRecords} gudang"
+          current-page-report-template="Menampilkan {first} sampai {last} dari {totalRecords} kategori"
           @page="handlePage"
           @sort="handleSort"
         >
           <template #empty>
-            <div class="py-8 text-center text-sm text-slate-500">Belum ada data gudang.</div>
+            <div class="py-8 text-center text-sm text-slate-500">Belum ada data kategori.</div>
           </template>
 
-          <Column field="name" header="Gudang" header-class="text-center" sortable>
+          <Column field="code" header="Kode" header-class="text-center" sortable>
+            <template #body="{ data }">
+              <Skeleton v-if="isLoadingRow(data)" height="1.25rem" width="5rem" />
+              <span v-else class="font-semibold text-slate-950">{{ data.code }}</span>
+            </template>
+          </Column>
+          <Column field="name" header="Nama" header-class="text-center" sortable>
             <template #body="{ data }">
               <Skeleton v-if="isLoadingRow(data)" height="1.25rem" width="11rem" />
-              <div v-else>
-                <p class="font-semibold text-slate-950">{{ data.name }}</p>
-              </div>
+              <span v-else class="font-semibold text-slate-950">{{ data.name }}</span>
             </template>
           </Column>
-          <Column field="location" header="Lokasi" header-class="text-center" sortable>
+          <Column header="Deskripsi" header-class="text-center">
             <template #body="{ data }">
-              <Skeleton v-if="isLoadingRow(data)" height="1.25rem" width="9rem" />
-              <span v-else class="text-slate-600">{{ data.location }}</span>
-            </template>
-          </Column>
-          <Column field="type" header="Tipe" header-class="text-center" sortable>
-            <template #body="{ data }">
-              <div class="flex justify-center">
-                <Skeleton
-                  v-if="isLoadingRow(data)"
-                  height="1.5rem"
-                  width="6.5rem"
-                  border-radius="999px"
-                />
-                <WarehouseTypeTag v-else :type="data.type" />
-              </div>
+              <Skeleton v-if="isLoadingRow(data)" height="1.25rem" width="14rem" />
+              <span v-else class="text-slate-600">{{ formatDescription(data.description) }}</span>
             </template>
           </Column>
           <Column field="is_active" header="Status" header-class="text-center" sortable>
@@ -371,30 +315,18 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
               <span v-else class="text-slate-600">{{ formatDate(data.created_at) }}</span>
             </template>
           </Column>
-          <Column v-if="canManage" header="Aksi" header-class="text-center" body-class="text-right">
+          <Column v-if="canUpdate" header="Aksi" header-class="text-center" body-class="text-right">
             <template #body="{ data }">
-              <div v-if="isLoadingRow(data)" class="flex justify-center gap-2">
+              <div v-if="isLoadingRow(data)" class="flex justify-center">
                 <Skeleton height="2rem" width="4rem" />
-                <Skeleton height="2rem" width="4.5rem" />
               </div>
-              <div v-else class="flex justify-center gap-2">
+              <div v-else class="flex justify-center">
                 <Button
-                  v-if="canUpdate"
                   label="Edit"
                   severity="info"
                   outlined
                   size="small"
                   @click="openEditDialog(data)"
-                />
-                <Button
-                  v-if="canDelete"
-                  label="Hapus"
-                  severity="danger"
-                  outlined
-                  size="small"
-                  :loading="actionId === data.id"
-                  :disabled="actionId === data.id"
-                  @click="confirmDeleteWarehouse(data)"
                 />
               </div>
             </template>
@@ -402,17 +334,15 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
         </DataTable>
       </div>
 
-      <WarehouseFormDialog
+      <CategoryFormDialog
         v-model:visible="formDialogVisible"
         :mode="formMode"
-        :warehouse="selectedWarehouse"
+        :category="selectedCategory"
         :submitting="isSubmitting"
         :errors="validationErrors"
         :message="formErrorMessage"
-        @submit="saveWarehouse"
+        @submit="saveCategory"
       />
-
-      <ConfirmDialog />
     </section>
   </DashboardLayout>
 </template>

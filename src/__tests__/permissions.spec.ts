@@ -7,9 +7,44 @@ import PrimeVue from 'primevue/config'
 import Aura from '@primeuix/themes/aura'
 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
+import * as categoryService from '@/services/categoryService'
 import * as warehouseService from '@/services/warehouseService'
 import { useAuthStore } from '@/stores/auth'
+import CategoryListView from '@/views/categories/CategoryListView.vue'
 import WarehouseListView from '@/views/warehouses/WarehouseListView.vue'
+
+vi.mock('@/services/categoryService', () => ({
+  getCategories: vi.fn(async () => ({
+    data: [
+      {
+        id: 1,
+        code: 'KAYU',
+        name: 'Kayu',
+        description: 'Material berbahan kayu',
+        is_active: true,
+        created_at: '2026-05-19T01:00:00.000000Z',
+      },
+    ],
+    current_page: 1,
+    last_page: 1,
+    per_page: 15,
+    total: 1,
+  })),
+  createCategory: vi.fn(async () => ({
+    id: 2,
+    code: 'BESI',
+    name: 'Besi',
+    description: 'Material berbahan besi',
+    is_active: true,
+  })),
+  updateCategory: vi.fn(async () => ({
+    id: 1,
+    code: 'KAYU',
+    name: 'Kayu Solid',
+    description: 'Material kayu solid',
+    is_active: true,
+  })),
+}))
 
 vi.mock('@/services/warehouseService', () => ({
   getWarehouses: vi.fn(async () => ({
@@ -78,6 +113,25 @@ describe('permission-aware frontend', () => {
     expect(wrapper.text()).toContain('Gudang')
   })
 
+  it('shows category menu only when user has categories.view', async () => {
+    const authStore = createAuthStore()
+    authStore.user = {
+      name: 'No Access',
+      all_permissions: [],
+    }
+
+    const wrapper = mountSidebar()
+    expect(wrapper.text()).not.toContain('Kategori')
+
+    authStore.user = {
+      name: 'Category Viewer',
+      all_permissions: ['categories.view'],
+    }
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('Kategori')
+  })
+
   it('hides create, edit, and delete warehouse actions without matching permissions', async () => {
     const wrapper = await mountWarehouseList({
       permissions: ['warehouses.view'],
@@ -132,6 +186,61 @@ describe('permission-aware frontend', () => {
       is_active: true,
     })
   })
+
+  it('hides create and edit category actions without matching permissions', async () => {
+    const wrapper = await mountCategoryList({
+      permissions: ['categories.view'],
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Kayu')
+    expect(wrapper.text()).not.toContain('Tambah Kategori')
+    expect(wrapper.text()).not.toContain('Edit')
+    expect(wrapper.text()).not.toContain('Hapus')
+  })
+
+  it('opens the category create dialog and submits a create request when permitted', async () => {
+    const wrapper = await mountCategoryList({
+      permissions: ['categories.view', 'categories.create'],
+    })
+    await flushPromises()
+
+    await getButton(wrapper, 'Tambah Kategori').trigger('click')
+
+    expect(wrapper.text()).toContain('create')
+
+    await getButton(wrapper, 'Submit Category Dialog').trigger('click')
+    await flushPromises()
+
+    expect(categoryService.createCategory).toHaveBeenCalledWith('token', {
+      code: 'BESI',
+      name: 'Besi',
+      description: 'Material berbahan besi',
+      is_active: true,
+    })
+  })
+
+  it('opens the category edit dialog and submits an update request when permitted', async () => {
+    const wrapper = await mountCategoryList({
+      permissions: ['categories.view', 'categories.update'],
+    })
+    await flushPromises()
+
+    await getButton(wrapper, 'Edit').trigger('click')
+
+    expect(wrapper.text()).toContain('edit')
+
+    await getButton(wrapper, 'Submit Category Dialog').trigger('click')
+    await flushPromises()
+
+    expect(categoryService.updateCategory).toHaveBeenCalledWith('token', 1, {
+      code: 'BESI',
+      name: 'Besi',
+      description: 'Material berbahan besi',
+      is_active: true,
+    })
+  })
 })
 
 function createAuthStore() {
@@ -150,6 +259,10 @@ function mountSidebar() {
       },
       {
         path: '/master/warehouses',
+        component: { template: '<div />' },
+      },
+      {
+        path: '/master/categories',
         component: { template: '<div />' },
       },
     ],
@@ -236,6 +349,84 @@ async function mountWarehouseList({ permissions }: { permissions: string[] }) {
                 })"
               >
                 Submit Dialog
+              </button>
+            </div>
+          `,
+        },
+      },
+    },
+  })
+}
+
+async function mountCategoryList({ permissions }: { permissions: string[] }) {
+  vi.clearAllMocks()
+
+  const authStore = createAuthStore()
+  authStore.token = 'token'
+  authStore.user = {
+    name: 'Category User',
+    all_permissions: permissions,
+  }
+
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      {
+        path: '/master/categories',
+        component: CategoryListView,
+      },
+    ],
+  })
+
+  router.push('/master/categories')
+  await router.isReady()
+
+  return mount(CategoryListView, {
+    global: {
+      plugins: [
+        router,
+        [
+          PrimeVue,
+          {
+            theme: {
+              preset: Aura,
+              options: {
+                darkModeSelector: false,
+              },
+            },
+          },
+        ],
+      ],
+      stubs: {
+        DashboardLayout: {
+          template: '<div><slot /></div>',
+        },
+        Button: {
+          props: ['label'],
+          template: '<button @click="$emit(\'click\', $event)">{{ label }}</button>',
+        },
+        Message: {
+          template: '<div><slot /></div>',
+        },
+        Tag: {
+          props: ['value'],
+          template: '<span>{{ value }}</span>',
+        },
+        CategoryFormDialog: {
+          props: ['visible', 'mode'],
+          emits: ['submit', 'update:visible'],
+          template: `
+            <div v-if="visible">
+              <span>{{ mode }}</span>
+              <button
+                @click="$emit('submit', {
+                  code: 'BESI',
+                  name: 'Besi',
+                  description: 'Material berbahan besi',
+                  is_active: true
+                })"
+              >
+                Submit Category Dialog
               </button>
             </div>
           `,
