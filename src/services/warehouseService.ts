@@ -1,5 +1,5 @@
 import { apiRequest } from '@/services/apiClient'
-import type { ApiEnvelope, PaginatedData } from '@/types/api'
+import type { ApiEnvelope, PaginatedData, PaginatedResourceEnvelope } from '@/types/api'
 import type { Warehouse, WarehouseListParams, WarehousePayload } from '@/types/warehouse'
 
 export async function getWarehouses(token: string, params: WarehouseListParams = {}) {
@@ -13,7 +13,11 @@ export async function getWarehouses(token: string, params: WarehouseListParams =
     searchParams.set('direction', params.direction ?? 'asc')
   }
 
-  const response = await apiRequest<ApiEnvelope<PaginatedData<Warehouse>>>(
+  if (params.search?.trim()) {
+    searchParams.set('search', params.search.trim())
+  }
+
+  const response = await apiRequest<PaginatedResourceEnvelope<Warehouse>>(
     `/admin/warehouses?${searchParams.toString()}`,
     {
       method: 'GET',
@@ -21,7 +25,7 @@ export async function getWarehouses(token: string, params: WarehouseListParams =
     },
   )
 
-  return response.data
+  return normalizePaginatedResponse(response)
 }
 
 export async function getWarehouse(token: string, id: string | number) {
@@ -58,4 +62,14 @@ export async function deleteWarehouse(token: string, id: string | number) {
     method: 'DELETE',
     token,
   })
+}
+
+function normalizePaginatedResponse<T>(response: PaginatedResourceEnvelope<T>): PaginatedData<T> {
+  return {
+    data: response.data,
+    current_page: response.meta.current_page,
+    last_page: response.meta.last_page,
+    per_page: response.meta.per_page,
+    total: response.meta.total,
+  }
 }

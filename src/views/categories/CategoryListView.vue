@@ -3,7 +3,10 @@ import { computed, onMounted, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
+import ConfirmDialog from 'primevue/confirmdialog'
+import { useConfirm } from 'primevue/useconfirm'
 import DataTable from 'primevue/datatable'
+import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Skeleton from 'primevue/skeleton'
 import Toolbar from 'primevue/toolbar'
@@ -26,10 +29,12 @@ type CategoryTableRow = Category | CategoryLoadingRow
 
 const authStore = useAuthStore()
 const router = useRouter()
+const confirm = useConfirm()
 
 const categories = ref<Category[]>([])
 const pagination = ref<PaginatedData<Category> | null>(null)
 const isLoading = ref(false)
+const actionId = ref<number | null>(null)
 const errorMessage = ref('')
 const successMessage = ref('')
 const formErrorMessage = ref('')
@@ -40,12 +45,16 @@ const formDialogVisible = ref(false)
 const isSubmitting = ref(false)
 const currentPage = ref(1)
 const perPage = 10
+const searchQuery = ref('')
+const activeSearch = ref('')
 const sortField = ref<CategorySortField>('code')
 const sortDirection = ref<SortDirection>('asc')
 const sortOrder = ref<1 | -1>(1)
 
 const canCreate = computed(() => authStore.hasPermission('categories.create'))
 const canUpdate = computed(() => authStore.hasPermission('categories.update'))
+const canDelete = computed(() => authStore.hasPermission('categories.delete'))
+const canManage = computed(() => canUpdate.value || canDelete.value)
 const tableRows = computed<CategoryTableRow[]>(() => {
   if (isLoading.value) {
     return Array.from({ length: perPage }, (_, index) => ({
@@ -76,6 +85,7 @@ async function loadCategories(page = currentPage.value) {
       perPage,
       sort: sortField.value,
       direction: sortDirection.value,
+      search: activeSearch.value,
     })
     categories.value = result.data
     pagination.value = result
@@ -89,6 +99,17 @@ async function loadCategories(page = currentPage.value) {
 
 function handlePage(event: { page?: number }) {
   void loadCategories((event.page ?? 0) + 1)
+}
+
+function applySearch() {
+  activeSearch.value = searchQuery.value.trim()
+  void loadCategories(1)
+}
+
+function clearSearch() {
+  searchQuery.value = ''
+  activeSearch.value = ''
+  void loadCategories(1)
 }
 
 function handleSort(event: {
@@ -148,6 +169,46 @@ async function saveCategory(payload: CategoryPayload) {
     await handleApiError(error, 'form')
   } finally {
     isSubmitting.value = false
+  }
+}
+
+function confirmDeleteCategory(category: Category) {
+  confirm.require({
+    header: 'Hapus Kategori',
+    message: `Apakah Anda yakin ingin menghapus kategori "${category.name}"?`,
+    icon: 'pi pi-exclamation-triangle',
+    rejectLabel: 'Batal',
+    acceptLabel: 'Hapus',
+    rejectProps: {
+      severity: 'secondary',
+      outlined: true,
+    },
+    acceptProps: {
+      severity: 'danger',
+    },
+    accept: () => {
+      void deleteCategory(category)
+    },
+  })
+}
+
+async function deleteCategory(category: Category) {
+  if (!authStore.token) {
+    return
+  }
+
+  actionId.value = category.id
+  errorMessage.value = ''
+  successMessage.value = ''
+
+  try {
+    await categoryService.deleteCategory(authStore.token, category.id)
+    successMessage.value = 'Kategori berhasil dihapus.'
+    await loadCategories()
+  } catch (error) {
+    await handleApiError(error, 'page')
+  } finally {
+    actionId.value = null
   }
 }
 
@@ -243,16 +304,48 @@ function isLoadingRow(row: CategoryTableRow): row is CategoryLoadingRow {
             </div>
           </template>
           <template #end>
-            <Button
-              icon="pi pi-refresh"
-              severity="secondary"
-              outlined
-              rounded
-              aria-label="Muat ulang data kategori"
-              title="Muat ulang data kategori"
-              :disabled="isLoading"
-              @click="loadCategories()"
-            />
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <span class="p-input-icon-left">
+                <InputText
+                  v-model="searchQuery"
+                  class="w-full sm:w-64"
+                  placeholder="Cari kategori"
+                  :disabled="isLoading"
+                  @keydown.enter.prevent="applySearch"
+                />
+              </span>
+              <div class="flex gap-2">
+                <Button
+                  icon="pi pi-search"
+                  severity="secondary"
+                  outlined
+                  aria-label="Cari kategori"
+                  title="Cari kategori"
+                  :disabled="isLoading"
+                  @click="applySearch"
+                />
+                <Button
+                  v-if="activeSearch"
+                  icon="pi pi-times"
+                  severity="secondary"
+                  outlined
+                  aria-label="Hapus pencarian kategori"
+                  title="Hapus pencarian kategori"
+                  :disabled="isLoading"
+                  @click="clearSearch"
+                />
+                <Button
+                  icon="pi pi-refresh"
+                  severity="secondary"
+                  outlined
+                  rounded
+                  aria-label="Muat ulang data kategori"
+                  title="Muat ulang data kategori"
+                  :disabled="isLoading"
+                  @click="loadCategories()"
+                />
+              </div>
+            </div>
           </template>
         </Toolbar>
 
@@ -315,18 +408,30 @@ function isLoadingRow(row: CategoryTableRow): row is CategoryLoadingRow {
               <span v-else class="text-slate-600">{{ formatDate(data.created_at) }}</span>
             </template>
           </Column>
-          <Column v-if="canUpdate" header="Aksi" header-class="text-center" body-class="text-right">
+          <Column v-if="canManage" header="Aksi" header-class="text-center" body-class="text-right">
             <template #body="{ data }">
-              <div v-if="isLoadingRow(data)" class="flex justify-center">
+              <div v-if="isLoadingRow(data)" class="flex justify-center gap-2">
                 <Skeleton height="2rem" width="4rem" />
+                <Skeleton height="2rem" width="4.5rem" />
               </div>
-              <div v-else class="flex justify-center">
+              <div v-else class="flex justify-center gap-2">
                 <Button
+                  v-if="canUpdate"
                   label="Edit"
                   severity="info"
                   outlined
                   size="small"
                   @click="openEditDialog(data)"
+                />
+                <Button
+                  v-if="canDelete"
+                  label="Hapus"
+                  severity="danger"
+                  outlined
+                  size="small"
+                  :loading="actionId === data.id"
+                  :disabled="actionId === data.id"
+                  @click="confirmDeleteCategory(data)"
                 />
               </div>
             </template>
@@ -343,6 +448,8 @@ function isLoadingRow(row: CategoryTableRow): row is CategoryLoadingRow {
         :message="formErrorMessage"
         @submit="saveCategory"
       />
+
+      <ConfirmDialog />
     </section>
   </DashboardLayout>
 </template>

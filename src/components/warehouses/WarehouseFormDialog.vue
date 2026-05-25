@@ -26,8 +26,9 @@ const emit = defineEmits<{
 }>()
 
 const form = reactive<WarehousePayload>({
+  code: '',
   name: '',
-  location: '',
+  location: null,
   type: 'raw',
   is_active: true,
 })
@@ -39,6 +40,7 @@ const typeOptions: Array<{ label: string; value: WarehouseType }> = [
   { label: 'Bahan Baku', value: 'raw' },
   { label: 'Dalam Proses', value: 'wip' },
   { label: 'Barang Jadi', value: 'finished' },
+  { label: 'General', value: 'general' },
 ]
 
 watch(
@@ -48,8 +50,9 @@ watch(
       return
     }
 
+    form.code = props.warehouse?.code ?? ''
     form.name = props.warehouse?.name ?? ''
-    form.location = props.warehouse?.location ?? ''
+    form.location = props.warehouse?.location ?? null
     form.type = props.warehouse?.type ?? 'raw'
     form.is_active = props.warehouse?.is_active ?? true
   },
@@ -61,7 +64,10 @@ function closeDialog() {
 }
 
 function submitForm() {
-  emit('submit', { ...form })
+  emit('submit', {
+    ...form,
+    location: form.location?.trim() ? form.location : null,
+  })
 }
 
 function getFieldError(field: keyof WarehousePayload) {
@@ -84,6 +90,22 @@ function getFieldError(field: keyof WarehousePayload) {
     <form class="space-y-5" novalidate @submit.prevent="submitForm">
       <div class="grid gap-5 md:grid-cols-2">
         <div class="space-y-2">
+          <label for="warehouse-code" class="block text-sm font-medium text-slate-700">
+            Kode
+          </label>
+          <InputText
+            id="warehouse-code"
+            v-model="form.code"
+            class="w-full"
+            :invalid="Boolean(getFieldError('code'))"
+            autocomplete="off"
+          />
+          <p v-if="getFieldError('code')" class="text-sm text-red-600">
+            {{ getFieldError('code') }}
+          </p>
+        </div>
+
+        <div class="space-y-2">
           <label for="warehouse-name" class="block text-sm font-medium text-slate-700">
             Nama
           </label>
@@ -96,6 +118,25 @@ function getFieldError(field: keyof WarehousePayload) {
           />
           <p v-if="getFieldError('name')" class="text-sm text-red-600">
             {{ getFieldError('name') }}
+          </p>
+        </div>
+
+      </div>
+
+      <div class="grid gap-5 md:grid-cols-2">
+        <div class="space-y-2">
+          <label for="warehouse-location" class="block text-sm font-medium text-slate-700">
+            Lokasi
+          </label>
+          <InputText
+            id="warehouse-location"
+            v-model="form.location"
+            class="w-full"
+            :invalid="Boolean(getFieldError('location'))"
+            autocomplete="off"
+          />
+          <p v-if="getFieldError('location')" class="text-sm text-red-600">
+            {{ getFieldError('location') }}
           </p>
         </div>
 
@@ -116,22 +157,6 @@ function getFieldError(field: keyof WarehousePayload) {
             {{ getFieldError('type') }}
           </p>
         </div>
-      </div>
-
-      <div class="space-y-2">
-        <label for="warehouse-location" class="block text-sm font-medium text-slate-700">
-          Lokasi
-        </label>
-        <InputText
-          id="warehouse-location"
-          v-model="form.location"
-          class="w-full"
-          :invalid="Boolean(getFieldError('location'))"
-          autocomplete="off"
-        />
-        <p v-if="getFieldError('location')" class="text-sm text-red-600">
-          {{ getFieldError('location') }}
-        </p>
       </div>
 
       <div class="app-toggle-panel flex items-center justify-between">

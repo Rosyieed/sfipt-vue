@@ -24,4 +24,5 @@ export type UnitListParams = {
   perPage?: number
   sort?: UnitSortField
   direction?: SortDirection
+  search?: string
 }

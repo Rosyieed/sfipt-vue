@@ -6,6 +6,7 @@ import Column from 'primevue/column'
 import ConfirmDialog from 'primevue/confirmdialog'
 import { useConfirm } from 'primevue/useconfirm'
 import DataTable from 'primevue/datatable'
+import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Skeleton from 'primevue/skeleton'
 import Toolbar from 'primevue/toolbar'
@@ -49,7 +50,9 @@ const formDialogVisible = ref(false)
 const isSubmitting = ref(false)
 const currentPage = ref(1)
 const perPage = 10
-const sortField = ref<WarehouseSortField>('name')
+const searchQuery = ref('')
+const activeSearch = ref('')
+const sortField = ref<WarehouseSortField>('code')
 const sortDirection = ref<SortDirection>('asc')
 const sortOrder = ref<1 | -1>(1)
 
@@ -87,6 +90,7 @@ async function loadWarehouses(page = currentPage.value) {
       perPage,
       sort: sortField.value,
       direction: sortDirection.value,
+      search: activeSearch.value,
     })
     warehouses.value = result.data
     pagination.value = result
@@ -100,6 +104,17 @@ async function loadWarehouses(page = currentPage.value) {
 
 function handlePage(event: { page?: number }) {
   void loadWarehouses((event.page ?? 0) + 1)
+}
+
+function applySearch() {
+  activeSearch.value = searchQuery.value.trim()
+  void loadWarehouses(1)
+}
+
+function clearSearch() {
+  searchQuery.value = ''
+  activeSearch.value = ''
+  void loadWarehouses(1)
 }
 
 function handleSort(event: {
@@ -130,6 +145,10 @@ function openEditDialog(warehouse: Warehouse) {
   formErrorMessage.value = ''
   validationErrors.value = {}
   formDialogVisible.value = true
+}
+
+function formatLocation(value: string | null) {
+  return value?.trim() || '-'
 }
 
 async function saveWarehouse(payload: WarehousePayload) {
@@ -249,7 +268,7 @@ function formatDate(value?: string) {
 }
 
 function isWarehouseSortField(value: string): value is WarehouseSortField {
-  return ['id', 'name', 'location', 'type', 'is_active', 'created_at'].includes(value)
+  return ['id', 'code', 'name', 'location', 'type', 'is_active', 'created_at'].includes(value)
 }
 
 function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
@@ -290,16 +309,48 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
             </div>
           </template>
           <template #end>
-            <Button
-              icon="pi pi-refresh"
-              severity="secondary"
-              outlined
-              rounded
-              aria-label="Muat ulang data gudang"
-              title="Muat ulang data gudang"
-              :disabled="isLoading"
-              @click="loadWarehouses()"
-            />
+            <div class="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <span class="p-input-icon-left">
+                <InputText
+                  v-model="searchQuery"
+                  class="w-full sm:w-64"
+                  placeholder="Cari gudang"
+                  :disabled="isLoading"
+                  @keydown.enter.prevent="applySearch"
+                />
+              </span>
+              <div class="flex gap-2">
+                <Button
+                  icon="pi pi-search"
+                  severity="secondary"
+                  outlined
+                  aria-label="Cari gudang"
+                  title="Cari gudang"
+                  :disabled="isLoading"
+                  @click="applySearch"
+                />
+                <Button
+                  v-if="activeSearch"
+                  icon="pi pi-times"
+                  severity="secondary"
+                  outlined
+                  aria-label="Hapus pencarian gudang"
+                  title="Hapus pencarian gudang"
+                  :disabled="isLoading"
+                  @click="clearSearch"
+                />
+                <Button
+                  icon="pi pi-refresh"
+                  severity="secondary"
+                  outlined
+                  rounded
+                  aria-label="Muat ulang data gudang"
+                  title="Muat ulang data gudang"
+                  :disabled="isLoading"
+                  @click="loadWarehouses()"
+                />
+              </div>
+            </div>
           </template>
         </Toolbar>
 
@@ -325,6 +376,12 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
             <div class="app-empty-state">Belum ada data gudang.</div>
           </template>
 
+          <Column field="code" header="Kode" header-class="text-center" sortable>
+            <template #body="{ data }">
+              <Skeleton v-if="isLoadingRow(data)" height="1.25rem" width="5rem" />
+              <span v-else class="font-semibold text-slate-950">{{ data.code }}</span>
+            </template>
+          </Column>
           <Column field="name" header="Gudang" header-class="text-center" sortable>
             <template #body="{ data }">
               <Skeleton v-if="isLoadingRow(data)" height="1.25rem" width="11rem" />
@@ -336,7 +393,7 @@ function isLoadingRow(row: WarehouseTableRow): row is WarehouseLoadingRow {
           <Column field="location" header="Lokasi" header-class="text-center" sortable>
             <template #body="{ data }">
               <Skeleton v-if="isLoadingRow(data)" height="1.25rem" width="9rem" />
-              <span v-else class="text-slate-600">{{ data.location }}</span>
+              <span v-else class="text-slate-600">{{ formatLocation(data.location) }}</span>
             </template>
           </Column>
           <Column field="type" header="Tipe" header-class="text-center" sortable>

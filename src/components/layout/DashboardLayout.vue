@@ -8,8 +8,10 @@ import { useAuthStore } from '@/stores/auth'
 
 const authStore = useAuthStore()
 const router = useRouter()
-const sidebarOpen = ref(false)
-const isDesktop = ref(false)
+const initialIsDesktop =
+  typeof window !== 'undefined' ? window.matchMedia('(min-width: 1024px)').matches : false
+const sidebarOpen = ref(initialIsDesktop)
+const isDesktop = ref(initialIsDesktop)
 let mediaQuery: MediaQueryList | null = null
 
 onMounted(() => {

@@ -12,12 +12,14 @@ const typeLabels: Record<WarehouseType, string> = {
   raw: 'Bahan Baku',
   wip: 'Dalam Proses',
   finished: 'Barang Jadi',
+  general: 'General',
 }
 
-const typeSeverities: Record<WarehouseType, 'info' | 'warn' | 'success'> = {
+const typeSeverities: Record<WarehouseType, 'info' | 'warn' | 'success' | 'secondary'> = {
   raw: 'info',
   wip: 'warn',
   finished: 'success',
+  general: 'secondary',
 }
 </script>
 

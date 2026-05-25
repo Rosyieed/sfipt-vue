@@ -1,5 +1,5 @@
 import { apiRequest } from '@/services/apiClient'
-import type { ApiEnvelope, PaginatedData } from '@/types/api'
+import type { ApiEnvelope, PaginatedData, PaginatedResourceEnvelope } from '@/types/api'
 import type { Unit, UnitListParams, UnitPayload } from '@/types/unit'
 
 export async function getUnits(token: string, params: UnitListParams = {}) {
@@ -13,7 +13,11 @@ export async function getUnits(token: string, params: UnitListParams = {}) {
     searchParams.set('direction', params.direction ?? 'asc')
   }
 
-  const response = await apiRequest<ApiEnvelope<PaginatedData<Unit>>>(
+  if (params.search?.trim()) {
+    searchParams.set('search', params.search.trim())
+  }
+
+  const response = await apiRequest<PaginatedResourceEnvelope<Unit>>(
     `/admin/units?${searchParams.toString()}`,
     {
       method: 'GET',
@@ -21,7 +25,7 @@ export async function getUnits(token: string, params: UnitListParams = {}) {
     },
   )
 
-  return response.data
+  return normalizePaginatedResponse(response)
 }
 
 export async function getUnit(token: string, id: string | number) {
@@ -51,4 +55,21 @@ export async function updateUnit(token: string, id: string | number, payload: Un
   })
 
   return response.data
+}
+
+export async function deleteUnit(token: string, id: string | number) {
+  await apiRequest(`/admin/units/${id}`, {
+    method: 'DELETE',
+    token,
+  })
+}
+
+function normalizePaginatedResponse<T>(response: PaginatedResourceEnvelope<T>): PaginatedData<T> {
+  return {
+    data: response.data,
+    current_page: response.meta.current_page,
+    last_page: response.meta.last_page,
+    per_page: response.meta.per_page,
+    total: response.meta.total,
+  }
 }

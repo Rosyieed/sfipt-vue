@@ -1,5 +1,5 @@
 import { apiRequest } from '@/services/apiClient'
-import type { ApiEnvelope, PaginatedData } from '@/types/api'
+import type { ApiEnvelope, PaginatedData, PaginatedResourceEnvelope } from '@/types/api'
 import type { Category, CategoryListParams, CategoryPayload } from '@/types/category'
 
 export async function getCategories(token: string, params: CategoryListParams = {}) {
@@ -13,7 +13,11 @@ export async function getCategories(token: string, params: CategoryListParams = 
     searchParams.set('direction', params.direction ?? 'asc')
   }
 
-  const response = await apiRequest<ApiEnvelope<PaginatedData<Category>>>(
+  if (params.search?.trim()) {
+    searchParams.set('search', params.search.trim())
+  }
+
+  const response = await apiRequest<PaginatedResourceEnvelope<Category>>(
     `/admin/categories?${searchParams.toString()}`,
     {
       method: 'GET',
@@ -21,7 +25,7 @@ export async function getCategories(token: string, params: CategoryListParams = 
     },
   )
 
-  return response.data
+  return normalizePaginatedResponse(response)
 }
 
 export async function getCategory(token: string, id: string | number) {
@@ -51,4 +55,21 @@ export async function updateCategory(token: string, id: string | number, payload
   })
 
   return response.data
+}
+
+export async function deleteCategory(token: string, id: string | number) {
+  await apiRequest(`/admin/categories/${id}`, {
+    method: 'DELETE',
+    token,
+  })
+}
+
+function normalizePaginatedResponse<T>(response: PaginatedResourceEnvelope<T>): PaginatedData<T> {
+  return {
+    data: response.data,
+    current_page: response.meta.current_page,
+    last_page: response.meta.last_page,
+    per_page: response.meta.per_page,
+    total: response.meta.total,
+  }
 }

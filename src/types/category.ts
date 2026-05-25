@@ -24,4 +24,5 @@ export type CategoryListParams = {
   perPage?: number
   sort?: CategorySortField
   direction?: SortDirection
+  search?: string
 }

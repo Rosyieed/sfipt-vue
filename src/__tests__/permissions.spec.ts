@@ -15,6 +15,12 @@ import CategoryListView from '@/views/categories/CategoryListView.vue'
 import UnitListView from '@/views/units/UnitListView.vue'
 import WarehouseListView from '@/views/warehouses/WarehouseListView.vue'
 
+vi.mock('primevue/useconfirm', () => ({
+  useConfirm: () => ({
+    require: (options: { accept?: () => void }) => options.accept?.(),
+  }),
+}))
+
 vi.mock('@/services/categoryService', () => ({
   getCategories: vi.fn(async () => ({
     data: [
@@ -46,6 +52,7 @@ vi.mock('@/services/categoryService', () => ({
     description: 'Material kayu solid',
     is_active: true,
   })),
+  deleteCategory: vi.fn(),
 }))
 
 vi.mock('@/services/unitService', () => ({
@@ -79,6 +86,7 @@ vi.mock('@/services/unitService', () => ({
     description: 'Satuan per item',
     is_active: true,
   })),
+  deleteUnit: vi.fn(),
 }))
 
 vi.mock('@/services/warehouseService', () => ({
@@ -86,9 +94,10 @@ vi.mock('@/services/warehouseService', () => ({
     data: [
       {
         id: 1,
+        code: 'WH-001',
         name: 'Main Warehouse',
         location: 'Plant 1',
-        type: 'raw',
+        type: 'general',
         is_active: true,
         created_at: '2026-05-13T01:00:00.000000Z',
       },
@@ -100,16 +109,18 @@ vi.mock('@/services/warehouseService', () => ({
   })),
   createWarehouse: vi.fn(async () => ({
     id: 2,
+    code: 'WH-002',
     name: 'Dialog Warehouse',
     location: 'Plant 2',
-    type: 'raw',
+    type: 'general',
     is_active: true,
   })),
   updateWarehouse: vi.fn(async () => ({
     id: 1,
+    code: 'WH-001',
     name: 'Updated Warehouse',
     location: 'Plant 1',
-    type: 'raw',
+    type: 'general',
     is_active: true,
   })),
   deleteWarehouse: vi.fn(),
@@ -213,9 +224,10 @@ describe('permission-aware frontend', () => {
     await flushPromises()
 
     expect(warehouseService.createWarehouse).toHaveBeenCalledWith('token', {
+      code: 'WH-002',
       name: 'Dialog Warehouse',
-      location: 'Plant 2',
-      type: 'raw',
+      location: null,
+      type: 'general',
       is_active: true,
     })
   })
@@ -234,9 +246,10 @@ describe('permission-aware frontend', () => {
     await flushPromises()
 
     expect(warehouseService.updateWarehouse).toHaveBeenCalledWith('token', 1, {
+      code: 'WH-002',
       name: 'Dialog Warehouse',
-      location: 'Plant 2',
-      type: 'raw',
+      location: null,
+      type: 'general',
       is_active: true,
     })
   })
@@ -252,6 +265,18 @@ describe('permission-aware frontend', () => {
     expect(wrapper.text()).not.toContain('Tambah Kategori')
     expect(wrapper.text()).not.toContain('Edit')
     expect(wrapper.text()).not.toContain('Hapus')
+  })
+
+  it('deletes a category when delete permission is granted', async () => {
+    const wrapper = await mountCategoryList({
+      permissions: ['categories.view', 'categories.delete'],
+    })
+    await flushPromises()
+
+    await getButton(wrapper, 'Hapus').trigger('click')
+    await flushPromises()
+
+    expect(categoryService.deleteCategory).toHaveBeenCalledWith('token', 1)
   })
 
   it('opens the category create dialog and submits a create request when permitted', async () => {
@@ -307,6 +332,18 @@ describe('permission-aware frontend', () => {
     expect(wrapper.text()).not.toContain('Tambah Satuan')
     expect(wrapper.text()).not.toContain('Edit')
     expect(wrapper.text()).not.toContain('Hapus')
+  })
+
+  it('deletes a unit when delete permission is granted', async () => {
+    const wrapper = await mountUnitList({
+      permissions: ['units.view', 'units.delete'],
+    })
+    await flushPromises()
+
+    await getButton(wrapper, 'Hapus').trigger('click')
+    await flushPromises()
+
+    expect(unitService.deleteUnit).toHaveBeenCalledWith('token', 1)
   })
 
   it('opens the unit create dialog and submits a create request when permitted', async () => {
@@ -455,9 +492,10 @@ async function mountWarehouseList({ permissions }: { permissions: string[] }) {
               <span>{{ mode }}</span>
               <button
                 @click="$emit('submit', {
+                  code: 'WH-002',
                   name: 'Dialog Warehouse',
-                  location: 'Plant 2',
-                  type: 'raw',
+                  location: null,
+                  type: 'general',
                   is_active: true
                 })"
               >
@@ -498,6 +536,7 @@ async function mountCategoryList({ permissions }: { permissions: string[] }) {
     global: {
       plugins: [
         router,
+        ConfirmationService,
         [
           PrimeVue,
           {
@@ -576,6 +615,7 @@ async function mountUnitList({ permissions }: { permissions: string[] }) {
     global: {
       plugins: [
         router,
+        ConfirmationService,
         [
           PrimeVue,
           {
