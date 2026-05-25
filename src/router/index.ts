@@ -52,6 +52,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/master/units',
+      name: 'units',
+      component: () => import('@/views/units/UnitListView.vue'),
+      meta: {
+        requiresAuth: true,
+        permission: 'units.view',
+      },
+    },
+    {
       path: '/master/roles',
       name: 'roles',
       component: () => import('@/views/roles/RoleListView.vue'),

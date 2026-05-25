@@ -8,9 +8,11 @@ import Aura from '@primeuix/themes/aura'
 
 import AppSidebar from '@/components/layout/AppSidebar.vue'
 import * as categoryService from '@/services/categoryService'
+import * as unitService from '@/services/unitService'
 import * as warehouseService from '@/services/warehouseService'
 import { useAuthStore } from '@/stores/auth'
 import CategoryListView from '@/views/categories/CategoryListView.vue'
+import UnitListView from '@/views/units/UnitListView.vue'
 import WarehouseListView from '@/views/warehouses/WarehouseListView.vue'
 
 vi.mock('@/services/categoryService', () => ({
@@ -42,6 +44,39 @@ vi.mock('@/services/categoryService', () => ({
     code: 'KAYU',
     name: 'Kayu Solid',
     description: 'Material kayu solid',
+    is_active: true,
+  })),
+}))
+
+vi.mock('@/services/unitService', () => ({
+  getUnits: vi.fn(async () => ({
+    data: [
+      {
+        id: 1,
+        code: 'PCS',
+        name: 'Pcs',
+        description: 'Satuan per item',
+        is_active: true,
+        created_at: '2026-05-19T01:00:00.000000Z',
+      },
+    ],
+    current_page: 1,
+    last_page: 1,
+    per_page: 15,
+    total: 1,
+  })),
+  createUnit: vi.fn(async () => ({
+    id: 2,
+    code: 'KG',
+    name: 'Kilogram',
+    description: 'Satuan berat kilogram',
+    is_active: true,
+  })),
+  updateUnit: vi.fn(async () => ({
+    id: 1,
+    code: 'PCS',
+    name: 'Pieces',
+    description: 'Satuan per item',
     is_active: true,
   })),
 }))
@@ -130,6 +165,25 @@ describe('permission-aware frontend', () => {
     await wrapper.vm.$nextTick()
 
     expect(wrapper.text()).toContain('Kategori')
+  })
+
+  it('shows unit menu only when user has units.view', async () => {
+    const authStore = createAuthStore()
+    authStore.user = {
+      name: 'No Access',
+      all_permissions: [],
+    }
+
+    const wrapper = mountSidebar()
+    expect(wrapper.text()).not.toContain('Satuan')
+
+    authStore.user = {
+      name: 'Unit Viewer',
+      all_permissions: ['units.view'],
+    }
+    await wrapper.vm.$nextTick()
+
+    expect(wrapper.text()).toContain('Satuan')
   })
 
   it('hides create, edit, and delete warehouse actions without matching permissions', async () => {
@@ -241,6 +295,61 @@ describe('permission-aware frontend', () => {
       is_active: true,
     })
   })
+
+  it('hides create and edit unit actions without matching permissions', async () => {
+    const wrapper = await mountUnitList({
+      permissions: ['units.view'],
+    })
+
+    await flushPromises()
+
+    expect(wrapper.text()).toContain('Pcs')
+    expect(wrapper.text()).not.toContain('Tambah Satuan')
+    expect(wrapper.text()).not.toContain('Edit')
+    expect(wrapper.text()).not.toContain('Hapus')
+  })
+
+  it('opens the unit create dialog and submits a create request when permitted', async () => {
+    const wrapper = await mountUnitList({
+      permissions: ['units.view', 'units.create'],
+    })
+    await flushPromises()
+
+    await getButton(wrapper, 'Tambah Satuan').trigger('click')
+
+    expect(wrapper.text()).toContain('create')
+
+    await getButton(wrapper, 'Submit Unit Dialog').trigger('click')
+    await flushPromises()
+
+    expect(unitService.createUnit).toHaveBeenCalledWith('token', {
+      code: 'KG',
+      name: 'Kilogram',
+      description: 'Satuan berat kilogram',
+      is_active: true,
+    })
+  })
+
+  it('opens the unit edit dialog and submits an update request when permitted', async () => {
+    const wrapper = await mountUnitList({
+      permissions: ['units.view', 'units.update'],
+    })
+    await flushPromises()
+
+    await getButton(wrapper, 'Edit').trigger('click')
+
+    expect(wrapper.text()).toContain('edit')
+
+    await getButton(wrapper, 'Submit Unit Dialog').trigger('click')
+    await flushPromises()
+
+    expect(unitService.updateUnit).toHaveBeenCalledWith('token', 1, {
+      code: 'KG',
+      name: 'Kilogram',
+      description: 'Satuan berat kilogram',
+      is_active: true,
+    })
+  })
 })
 
 function createAuthStore() {
@@ -263,6 +372,10 @@ function mountSidebar() {
       },
       {
         path: '/master/categories',
+        component: { template: '<div />' },
+      },
+      {
+        path: '/master/units',
         component: { template: '<div />' },
       },
     ],
@@ -427,6 +540,84 @@ async function mountCategoryList({ permissions }: { permissions: string[] }) {
                 })"
               >
                 Submit Category Dialog
+              </button>
+            </div>
+          `,
+        },
+      },
+    },
+  })
+}
+
+async function mountUnitList({ permissions }: { permissions: string[] }) {
+  vi.clearAllMocks()
+
+  const authStore = createAuthStore()
+  authStore.token = 'token'
+  authStore.user = {
+    name: 'Unit User',
+    all_permissions: permissions,
+  }
+
+  const router = createRouter({
+    history: createMemoryHistory(),
+    routes: [
+      {
+        path: '/master/units',
+        component: UnitListView,
+      },
+    ],
+  })
+
+  router.push('/master/units')
+  await router.isReady()
+
+  return mount(UnitListView, {
+    global: {
+      plugins: [
+        router,
+        [
+          PrimeVue,
+          {
+            theme: {
+              preset: Aura,
+              options: {
+                darkModeSelector: false,
+              },
+            },
+          },
+        ],
+      ],
+      stubs: {
+        DashboardLayout: {
+          template: '<div><slot /></div>',
+        },
+        Button: {
+          props: ['label'],
+          template: '<button @click="$emit(\'click\', $event)">{{ label }}</button>',
+        },
+        Message: {
+          template: '<div><slot /></div>',
+        },
+        Tag: {
+          props: ['value'],
+          template: '<span>{{ value }}</span>',
+        },
+        UnitFormDialog: {
+          props: ['visible', 'mode'],
+          emits: ['submit', 'update:visible'],
+          template: `
+            <div v-if="visible">
+              <span>{{ mode }}</span>
+              <button
+                @click="$emit('submit', {
+                  code: 'KG',
+                  name: 'Kilogram',
+                  description: 'Satuan berat kilogram',
+                  is_active: true
+                })"
+              >
+                Submit Unit Dialog
               </button>
             </div>
           `,

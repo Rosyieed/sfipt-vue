@@ -47,6 +47,11 @@ const navigationItems: NavigationItem[] = [
     to: '/master/categories',
     permission: 'categories.view',
   },
+  {
+    label: 'Satuan',
+    to: '/master/units',
+    permission: 'units.view',
+  },
 ]
 
 const visibleNavigationItems = computed(() =>
