@@ -18,7 +18,7 @@ export async function getUnits(token: string, params: UnitListParams = {}) {
   }
 
   const response = await apiRequest<PaginatedResourceEnvelope<Unit>>(
-    `/admin/units?${searchParams.toString()}`,
+    `/inventory/units?${searchParams.toString()}`,
     {
       method: 'GET',
       token,
@@ -29,7 +29,7 @@ export async function getUnits(token: string, params: UnitListParams = {}) {
 }
 
 export async function getUnit(token: string, id: string | number) {
-  const response = await apiRequest<ApiEnvelope<Unit>>(`/admin/units/${id}`, {
+  const response = await apiRequest<ApiEnvelope<Unit>>(`/inventory/units/${id}`, {
     method: 'GET',
     token,
   })
@@ -38,7 +38,7 @@ export async function getUnit(token: string, id: string | number) {
 }
 
 export async function createUnit(token: string, payload: UnitPayload) {
-  const response = await apiRequest<ApiEnvelope<Unit>>('/admin/units', {
+  const response = await apiRequest<ApiEnvelope<Unit>>('/inventory/units', {
     method: 'POST',
     token,
     body: JSON.stringify(payload),
@@ -48,7 +48,7 @@ export async function createUnit(token: string, payload: UnitPayload) {
 }
 
 export async function updateUnit(token: string, id: string | number, payload: UnitPayload) {
-  const response = await apiRequest<ApiEnvelope<Unit>>(`/admin/units/${id}`, {
+  const response = await apiRequest<ApiEnvelope<Unit>>(`/inventory/units/${id}`, {
     method: 'PUT',
     token,
     body: JSON.stringify(payload),
@@ -58,7 +58,7 @@ export async function updateUnit(token: string, id: string | number, payload: Un
 }
 
 export async function deleteUnit(token: string, id: string | number) {
-  await apiRequest(`/admin/units/${id}`, {
+  await apiRequest(`/inventory/units/${id}`, {
     method: 'DELETE',
     token,
   })

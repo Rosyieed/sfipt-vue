@@ -18,7 +18,7 @@ export async function getWarehouses(token: string, params: WarehouseListParams =
   }
 
   const response = await apiRequest<PaginatedResourceEnvelope<Warehouse>>(
-    `/admin/warehouses?${searchParams.toString()}`,
+    `/inventory/warehouses?${searchParams.toString()}`,
     {
       method: 'GET',
       token,
@@ -29,7 +29,7 @@ export async function getWarehouses(token: string, params: WarehouseListParams =
 }
 
 export async function getWarehouse(token: string, id: string | number) {
-  const response = await apiRequest<ApiEnvelope<Warehouse>>(`/admin/warehouses/${id}`, {
+  const response = await apiRequest<ApiEnvelope<Warehouse>>(`/inventory/warehouses/${id}`, {
     method: 'GET',
     token,
   })
@@ -38,7 +38,7 @@ export async function getWarehouse(token: string, id: string | number) {
 }
 
 export async function createWarehouse(token: string, payload: WarehousePayload) {
-  const response = await apiRequest<ApiEnvelope<Warehouse>>('/admin/warehouses', {
+  const response = await apiRequest<ApiEnvelope<Warehouse>>('/inventory/warehouses', {
     method: 'POST',
     token,
     body: JSON.stringify(payload),
@@ -48,7 +48,7 @@ export async function createWarehouse(token: string, payload: WarehousePayload) 
 }
 
 export async function updateWarehouse(token: string, id: string | number, payload: WarehousePayload) {
-  const response = await apiRequest<ApiEnvelope<Warehouse>>(`/admin/warehouses/${id}`, {
+  const response = await apiRequest<ApiEnvelope<Warehouse>>(`/inventory/warehouses/${id}`, {
     method: 'PUT',
     token,
     body: JSON.stringify(payload),
@@ -58,7 +58,7 @@ export async function updateWarehouse(token: string, id: string | number, payloa
 }
 
 export async function deleteWarehouse(token: string, id: string | number) {
-  await apiRequest(`/admin/warehouses/${id}`, {
+  await apiRequest(`/inventory/warehouses/${id}`, {
     method: 'DELETE',
     token,
   })

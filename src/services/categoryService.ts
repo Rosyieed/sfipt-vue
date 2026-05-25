@@ -18,7 +18,7 @@ export async function getCategories(token: string, params: CategoryListParams = 
   }
 
   const response = await apiRequest<PaginatedResourceEnvelope<Category>>(
-    `/admin/categories?${searchParams.toString()}`,
+    `/inventory/categories?${searchParams.toString()}`,
     {
       method: 'GET',
       token,
@@ -29,7 +29,7 @@ export async function getCategories(token: string, params: CategoryListParams = 
 }
 
 export async function getCategory(token: string, id: string | number) {
-  const response = await apiRequest<ApiEnvelope<Category>>(`/admin/categories/${id}`, {
+  const response = await apiRequest<ApiEnvelope<Category>>(`/inventory/categories/${id}`, {
     method: 'GET',
     token,
   })
@@ -38,7 +38,7 @@ export async function getCategory(token: string, id: string | number) {
 }
 
 export async function createCategory(token: string, payload: CategoryPayload) {
-  const response = await apiRequest<ApiEnvelope<Category>>('/admin/categories', {
+  const response = await apiRequest<ApiEnvelope<Category>>('/inventory/categories', {
     method: 'POST',
     token,
     body: JSON.stringify(payload),
@@ -48,7 +48,7 @@ export async function createCategory(token: string, payload: CategoryPayload) {
 }
 
 export async function updateCategory(token: string, id: string | number, payload: CategoryPayload) {
-  const response = await apiRequest<ApiEnvelope<Category>>(`/admin/categories/${id}`, {
+  const response = await apiRequest<ApiEnvelope<Category>>(`/inventory/categories/${id}`, {
     method: 'PUT',
     token,
     body: JSON.stringify(payload),
@@ -58,7 +58,7 @@ export async function updateCategory(token: string, id: string | number, payload
 }
 
 export async function deleteCategory(token: string, id: string | number) {
-  await apiRequest(`/admin/categories/${id}`, {
+  await apiRequest(`/inventory/categories/${id}`, {
     method: 'DELETE',
     token,
   })
