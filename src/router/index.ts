@@ -34,7 +34,7 @@ const router = createRouter({
       },
     },
     {
-      path: '/master/warehouses',
+      path: '/inventory/warehouses',
       name: 'warehouses',
       component: () => import('@/views/warehouses/WarehouseListView.vue'),
       meta: {
@@ -43,7 +43,7 @@ const router = createRouter({
       },
     },
     {
-      path: '/master/categories',
+      path: '/inventory/categories',
       name: 'categories',
       component: () => import('@/views/categories/CategoryListView.vue'),
       meta: {
@@ -52,7 +52,7 @@ const router = createRouter({
       },
     },
     {
-      path: '/master/units',
+      path: '/inventory/units',
       name: 'units',
       component: () => import('@/views/units/UnitListView.vue'),
       meta: {

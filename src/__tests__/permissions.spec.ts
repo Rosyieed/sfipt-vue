@@ -404,15 +404,15 @@ function mountSidebar() {
         component: { template: '<div />' },
       },
       {
-        path: '/master/warehouses',
+        path: '/inventory/warehouses',
         component: { template: '<div />' },
       },
       {
-        path: '/master/categories',
+        path: '/inventory/categories',
         component: { template: '<div />' },
       },
       {
-        path: '/master/units',
+        path: '/inventory/units',
         component: { template: '<div />' },
       },
     ],
@@ -443,13 +443,13 @@ async function mountWarehouseList({ permissions }: { permissions: string[] }) {
     history: createMemoryHistory(),
     routes: [
       {
-        path: '/master/warehouses',
+        path: '/inventory/warehouses',
         component: WarehouseListView,
       },
     ],
   })
 
-  router.push('/master/warehouses')
+  router.push('/inventory/warehouses')
   await router.isReady()
 
   return mount(WarehouseListView, {
@@ -523,13 +523,13 @@ async function mountCategoryList({ permissions }: { permissions: string[] }) {
     history: createMemoryHistory(),
     routes: [
       {
-        path: '/master/categories',
+        path: '/inventory/categories',
         component: CategoryListView,
       },
     ],
   })
 
-  router.push('/master/categories')
+  router.push('/inventory/categories')
   await router.isReady()
 
   return mount(CategoryListView, {
@@ -602,13 +602,13 @@ async function mountUnitList({ permissions }: { permissions: string[] }) {
     history: createMemoryHistory(),
     routes: [
       {
-        path: '/master/units',
+        path: '/inventory/units',
         component: UnitListView,
       },
     ],
   })
 
-  router.push('/master/units')
+  router.push('/inventory/units')
   await router.isReady()
 
   return mount(UnitListView, {

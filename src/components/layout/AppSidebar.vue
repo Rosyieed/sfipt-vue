@@ -23,12 +23,7 @@ const emit = defineEmits<{
 
 const authStore = useAuthStore()
 
-const navigationItems: NavigationItem[] = [
-  {
-    label: 'Dashboard',
-    to: '/dashboard',
-    icon: 'pi pi-chart-line',
-  },
+const masterNavigationItems: NavigationItem[] = [
   {
     label: 'Users',
     to: '/master/users',
@@ -41,28 +36,35 @@ const navigationItems: NavigationItem[] = [
     icon: 'pi pi-shield',
     permission: 'roles.view',
   },
+]
+
+const inventoryNavigationItems: NavigationItem[] = [
   {
     label: 'Gudang',
-    to: '/master/warehouses',
+    to: '/inventory/warehouses',
     icon: 'pi pi-warehouse',
     permission: 'warehouses.view',
   },
   {
     label: 'Kategori',
-    to: '/master/categories',
+    to: '/inventory/categories',
     icon: 'pi pi-tags',
     permission: 'categories.view',
   },
   {
     label: 'Satuan',
-    to: '/master/units',
+    to: '/inventory/units',
     icon: 'pi pi-box',
     permission: 'units.view',
   },
 ]
 
-const visibleNavigationItems = computed(() =>
-  navigationItems.filter((item) => !item.permission || authStore.hasPermission(item.permission)),
+const visibleMasterNavigationItems = computed(() =>
+  masterNavigationItems.filter((item) => !item.permission || authStore.hasPermission(item.permission)),
+)
+
+const visibleInventoryNavigationItems = computed(() =>
+  inventoryNavigationItems.filter((item) => !item.permission || authStore.hasPermission(item.permission)),
 )
 </script>
 
@@ -112,13 +114,32 @@ const visibleNavigationItems = computed(() =>
           </div>
         </div>
 
-        <div v-if="visibleNavigationItems.some((item) => item.to !== '/dashboard')">
+        <div v-if="visibleMasterNavigationItems.length">
           <p class="px-3 text-xs font-extrabold uppercase tracking-[0.18em] text-slate-400">
             Master
           </p>
           <div class="mt-2 space-y-1">
             <RouterLink
-              v-for="item in visibleNavigationItems.filter((item) => item.to !== '/dashboard')"
+              v-for="item in visibleMasterNavigationItems"
+              :key="item.to"
+              :to="item.to"
+              class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-teal-50 hover:text-teal-800"
+              active-class="bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg shadow-cyan-900/15"
+              @click="closeOnMenuClick && emit('close')"
+            >
+              <i :class="[item.icon, 'text-base']"></i>
+              <span>{{ item.label }}</span>
+            </RouterLink>
+          </div>
+        </div>
+
+        <div v-if="visibleInventoryNavigationItems.length">
+          <p class="px-3 text-xs font-extrabold uppercase tracking-[0.18em] text-slate-400">
+            Inventory
+          </p>
+          <div class="mt-2 space-y-1">
+            <RouterLink
+              v-for="item in visibleInventoryNavigationItems"
               :key="item.to"
               :to="item.to"
               class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-teal-50 hover:text-teal-800"
