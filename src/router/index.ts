@@ -61,12 +61,80 @@ const router = createRouter({
       },
     },
     {
+      path: '/inventory/products',
+      name: 'products',
+      component: () => import('@/views/products/ProductListView.vue'),
+      meta: {
+        requiresAuth: true,
+        permission: 'products.view',
+      },
+    },
+    {
       path: '/master/roles',
       name: 'roles',
       component: () => import('@/views/roles/RoleListView.vue'),
       meta: {
         requiresAuth: true,
         permission: 'roles.view',
+      },
+    },
+    {
+      path: '/400',
+      name: 'bad-request',
+      component: () => import('@/views/errors/ErrorView.vue'),
+      props: {
+        status: '400',
+      },
+    },
+    {
+      path: '/401',
+      name: 'unauthorized',
+      component: () => import('@/views/errors/ErrorView.vue'),
+      props: {
+        status: '401',
+      },
+    },
+    {
+      path: '/403',
+      name: 'forbidden',
+      component: () => import('@/views/errors/ErrorView.vue'),
+      props: {
+        status: '403',
+      },
+      meta: {
+        requiresAuth: true,
+      },
+    },
+    {
+      path: '/404',
+      name: 'not-found',
+      component: () => import('@/views/errors/ErrorView.vue'),
+      props: {
+        status: '404',
+      },
+    },
+    {
+      path: '/500',
+      name: 'server-error',
+      component: () => import('@/views/errors/ErrorView.vue'),
+      props: {
+        status: '500',
+      },
+    },
+    {
+      path: '/503',
+      name: 'service-unavailable',
+      component: () => import('@/views/errors/ErrorView.vue'),
+      props: {
+        status: '503',
+      },
+    },
+    {
+      path: '/:pathMatch(.*)*',
+      name: 'catch-all-not-found',
+      component: () => import('@/views/errors/ErrorView.vue'),
+      props: {
+        status: '404',
       },
     },
   ],
@@ -93,7 +161,10 @@ router.beforeEach(async (to) => {
 
     if (!authStore.hasPermission(to.meta.permission)) {
       return {
-        name: 'dashboard',
+        name: 'forbidden',
+        query: {
+          from: to.fullPath,
+        },
       }
     }
   }
