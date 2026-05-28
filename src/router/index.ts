@@ -70,6 +70,24 @@ const router = createRouter({
       },
     },
     {
+      path: '/inventory/stocks',
+      name: 'stocks',
+      component: () => import('@/views/stocks/StockListView.vue'),
+      meta: {
+        requiresAuth: true,
+        permission: 'stocks.view',
+      },
+    },
+    {
+      path: '/inventory/mutations',
+      name: 'mutations',
+      component: () => import('@/views/mutations/MutationListView.vue'),
+      meta: {
+        requiresAuth: true,
+        permission: 'mutations.view',
+      },
+    },
+    {
       path: '/master/roles',
       name: 'roles',
       component: () => import('@/views/roles/RoleListView.vue'),

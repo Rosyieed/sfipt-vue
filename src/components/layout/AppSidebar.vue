@@ -63,6 +63,18 @@ const inventoryNavigationItems: NavigationItem[] = [
     icon: 'pi pi-box',
     permission: 'products.view',
   },
+  {
+    label: 'Stok',
+    to: '/inventory/stocks',
+    icon: 'pi pi-database',
+    permission: 'stocks.view',
+  },
+  {
+    label: 'Mutasi',
+    to: '/inventory/mutations',
+    icon: 'pi pi-arrow-right-arrow-left',
+    permission: 'mutations.view',
+  },
 ]
 
 const visibleMasterNavigationItems = computed(() =>
