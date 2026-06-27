@@ -77,12 +77,31 @@ const inventoryNavigationItems: NavigationItem[] = [
   },
 ]
 
+const productionNavigationItems: NavigationItem[] = [
+  {
+    label: 'BOM (Resep)',
+    to: '/production/boms',
+    icon: 'pi pi-cog',
+    permission: 'boms.view',
+  },
+]
+
 const visibleMasterNavigationItems = computed(() =>
-  masterNavigationItems.filter((item) => !item.permission || authStore.hasPermission(item.permission)),
+  masterNavigationItems.filter(
+    (item) => !item.permission || authStore.hasPermission(item.permission),
+  ),
 )
 
 const visibleInventoryNavigationItems = computed(() =>
-  inventoryNavigationItems.filter((item) => !item.permission || authStore.hasPermission(item.permission)),
+  inventoryNavigationItems.filter(
+    (item) => !item.permission || authStore.hasPermission(item.permission),
+  ),
+)
+
+const visibleProductionNavigationItems = computed(() =>
+  productionNavigationItems.filter(
+    (item) => !item.permission || authStore.hasPermission(item.permission),
+  ),
 )
 </script>
 
@@ -158,6 +177,25 @@ const visibleInventoryNavigationItems = computed(() =>
           <div class="mt-2 space-y-1">
             <RouterLink
               v-for="item in visibleInventoryNavigationItems"
+              :key="item.to"
+              :to="item.to"
+              class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-teal-50 hover:text-teal-800"
+              active-class="bg-gradient-to-r from-teal-600 to-cyan-600 text-white shadow-lg shadow-cyan-900/15"
+              @click="closeOnMenuClick && emit('close')"
+            >
+              <i :class="[item.icon, 'text-base']"></i>
+              <span>{{ item.label }}</span>
+            </RouterLink>
+          </div>
+        </div>
+
+        <div v-if="visibleProductionNavigationItems.length">
+          <p class="px-3 text-xs font-extrabold uppercase tracking-[0.18em] text-slate-400 mt-5">
+            Produksi
+          </p>
+          <div class="mt-2 space-y-1">
+            <RouterLink
+              v-for="item in visibleProductionNavigationItems"
               :key="item.to"
               :to="item.to"
               class="flex items-center gap-3 rounded-xl px-3 py-2.5 text-sm font-semibold text-slate-600 transition hover:bg-teal-50 hover:text-teal-800"

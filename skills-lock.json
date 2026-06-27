@@ -1,0 +1,17 @@
+{
+  "version": 1,
+  "skills": {
+    "ui-ux-pro-max": {
+      "source": "nextlevelbuilder/ui-ux-pro-max-skill",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/ui-ux-pro-max/SKILL.md",
+      "computedHash": "20c0ed05adb01fde3db5bb1aeefd61d33db2471bdadfd9c9ce19d30dd54a12fd"
+    },
+    "vue-patterns": {
+      "source": "affaan-m/ECC",
+      "sourceType": "github",
+      "skillPath": "skills/vue-patterns/SKILL.md",
+      "computedHash": "ebe1a46263e8f3b16b98f7926be131072a5690028c5da9e96ae457e568806a1e"
+    }
+  }
+}

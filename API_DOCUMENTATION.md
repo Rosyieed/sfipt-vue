@@ -526,3 +526,122 @@ Notes:
 - `transfer` requires both warehouses and they must be different.
 - `adjustment` uses exactly one direction: `to_warehouse_id` to add stock or `from_warehouse_id` to reduce stock.
 - Mutations fail with `422 Unprocessable Entity` if stock is not enough.
+
+---
+
+## 11. Production - Bill of Materials (BOM)
+
+> These endpoints require the corresponding `boms.*` permissions.
+
+| Method | Endpoint | Permission | Description |
+|---|---|---|---|
+| GET | `/production/boms` | `boms.view` | List BOMs |
+| POST | `/production/boms` | `boms.create` | Create BOM |
+| GET | `/production/boms/{bom}` | `boms.view` | Get BOM detail |
+| PUT | `/production/boms/{bom}` | `boms.update` | Update BOM |
+| DELETE | `/production/boms/{bom}` | `boms.delete` | Delete BOM |
+| GET | `/inventory/products/{productId}/boms` | `boms.view` | Get BOMs by parent product |
+
+### List BOMs Query Parameters
+
+| Parameter | Example | Description |
+|---|---|---|
+| `q` | `?q=BOM-MEJA` | Search by BOM code, name, or description |
+| `product_id` | `?product_id=1` | Filter by parent product ID |
+| `is_active` | `?is_active=1` | Filter by active status (`1` or `0`) |
+| `per_page` | `?per_page=10` | Items per page, min 1, max 100 |
+| `sort` | `?sort=code` | Sort field: `id`, `code`, `name`, `output_qty`, `is_default`, `is_active`, `created_at` |
+| `direction` | `?direction=asc` | `asc` or `desc` |
+
+### Create BOM Body
+
+```json
+{
+  "product_id": 1,
+  "code": "BOM-MEJA-001",
+  "name": "Resep Meja Kayu Standar",
+  "description": "Formulasi bahan baku untuk memproduksi 1 unit meja kayu",
+  "output_qty": 1,
+  "is_default": true,
+  "is_active": true,
+  "items": [
+    {
+      "material_id": 2,
+      "qty_needed": 4,
+      "unit_id": 1,
+      "notes": "Kaki meja kayu"
+    },
+    {
+      "material_id": 3,
+      "qty_needed": 1,
+      "unit_id": 1,
+      "notes": "Papan meja kayu"
+    }
+  ]
+}
+```
+
+### Update BOM Body
+
+All fields are optional.
+
+```json
+{
+  "name": "Resep Meja Kayu Premium",
+  "output_qty": 1,
+  "items": [
+    {
+      "material_id": 2,
+      "qty_needed": 4,
+      "unit_id": 1
+    }
+  ]
+}
+```
+
+### BOM Response Example
+
+```json
+{
+  "success": true,
+  "message": "BOM retrieved successfully",
+  "data": {
+    "id": 1,
+    "product_id": 1,
+    "code": "BOM-MEJA-001",
+    "name": "Resep Meja Kayu Standar",
+    "description": "Formulasi bahan baku untuk memproduksi 1 unit meja kayu",
+    "output_qty": "1.0000",
+    "is_default": true,
+    "is_active": true,
+    "created_at": "2026-06-27T00:00:00.000000Z",
+    "updated_at": "2026-06-27T00:00:00.000000Z",
+    "product": {
+      "id": 1,
+      "sku": "FG-MEJA-001",
+      "name": "Meja Kayu Jadi"
+    },
+    "items": [
+      {
+        "id": 1,
+        "bom_id": 1,
+        "material_id": 2,
+        "qty_needed": "4.0000",
+        "unit_id": 1,
+        "notes": "Kaki meja kayu",
+        "material": {
+          "id": 2,
+          "sku": "RM-KAKI-001",
+          "name": "Kaki Meja"
+        },
+        "unit": {
+          "id": 1,
+          "code": "PCS",
+          "name": "Pcs"
+        }
+      }
+    ]
+  }
+}
+```
+

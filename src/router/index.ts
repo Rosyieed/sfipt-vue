@@ -88,6 +88,15 @@ const router = createRouter({
       },
     },
     {
+      path: '/production/boms',
+      name: 'boms',
+      component: () => import('@/views/boms/BomListView.vue'),
+      meta: {
+        requiresAuth: true,
+        permission: 'boms.view',
+      },
+    },
+    {
       path: '/master/roles',
       name: 'roles',
       component: () => import('@/views/roles/RoleListView.vue'),
